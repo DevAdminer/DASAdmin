@@ -51,5 +51,5 @@ export default {
   "menu.editor.koni": "拓扑编辑器",
   "menu.chatbot": "AI 助手",
   "menu.task": "任务管理",
-  "menu.task.manger": "任务列表",
+  "menu.task.manager": "任务列表",
 };

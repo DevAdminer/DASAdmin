@@ -73,12 +73,12 @@ export default [
     routes: [
       {
         path: "/task",
-        redirect: "/task/manger",
+        redirect: "/task/manager",
       },
       {
-        name: "manger",
-        path: "/task/manger",
-        component: "./task/manger",
+        name: "manager",
+        path: "/task/manager",
+        component: "./manager",
       },
     ],
   },

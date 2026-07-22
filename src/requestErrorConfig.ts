@@ -30,8 +30,24 @@ export const errorConfig: RequestConfig = {
   errorConfig: {
     // 错误抛出
     errorThrower: (res) => {
+      const resData = res as any;
+      // 优先处理后端统一格式: { status: "ok"/"error", msg, data }
+      if (resData?.status !== undefined) {
+        if (resData.status !== "ok") {
+          const error: any = new Error(resData.msg || "请求失败");
+          error.name = "BizError";
+          error.info = {
+            errorMessage: resData.msg,
+            showType: ErrorShowType.ERROR_MESSAGE,
+            data: resData.data,
+          };
+          throw error;
+        }
+        return; // status === "ok"，正常返回
+      }
+      // 兼容原有格式: { success, data, errorCode, errorMessage, showType }
       const { success, data, errorCode, errorMessage, showType } =
-        res as unknown as ResponseStructure;
+        resData as unknown as ResponseStructure;
       if (!success) {
         const error: any = new Error(errorMessage);
         error.name = "BizError";
