@@ -50,4 +50,8 @@ export default {
   'menu.editor.mind': 'Mind Editor',
   'menu.editor.koni': 'Koni Editor',
   'menu.chatbot': 'AI Assistant',
+  'menu.task': 'Task',
+  'menu.task.manager': 'Task List',
+  'menu.spider': 'Spider',
+  'menu.spider.spider-list': 'Spider List',
 };

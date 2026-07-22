@@ -43,12 +43,12 @@ export default [
       },
     ],
   },
-  {
-    path: "/welcome",
-    name: "welcome",
-    icon: "home",
-    component: "./Welcome",
-  },
+  // {
+  //   path: "/welcome",
+  //   name: "welcome",
+  //   icon: "home",
+  //   component: "./Welcome",
+  // },
   {
     path: "/admin",
     name: "admin",
@@ -79,6 +79,22 @@ export default [
         name: "manager",
         path: "/task/manager",
         component: "./manager",
+      },
+    ],
+  },
+  {
+    path: "/spider",
+    name: "spider",
+    icon: "robot",
+    routes: [
+      {
+        path: "/spider",
+        redirect: "/spider/list",
+      },
+      {
+        name: "spider-list",
+        path: "/spider/list",
+        component: "./spider",
       },
     ],
   },
@@ -304,7 +320,7 @@ export default [
   },
   {
     path: "/",
-    redirect: "/dashboard/analysis",
+    redirect: "/task/manager",
   },
   {
     component: "./exception/404",

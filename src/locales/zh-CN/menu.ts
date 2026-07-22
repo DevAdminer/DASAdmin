@@ -52,4 +52,6 @@ export default {
   "menu.chatbot": "AI 助手",
   "menu.task": "任务管理",
   "menu.task.manager": "任务列表",
+  "menu.spider": "爬虫管理",
+  "menu.spider.spider-list": "爬虫列表",
 };
