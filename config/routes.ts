@@ -78,7 +78,7 @@ export default [
       {
         name: "manager",
         path: "/task/manager",
-        component: "./manager",
+        component: "./task/manager",
       },
     ],
   },

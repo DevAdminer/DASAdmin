@@ -1,24 +1,26 @@
-import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { useQuery } from '@tanstack/react-query';
-import { Button, Space, Tag, Tooltip, Typography, message } from 'antd';
-import type { ProColumns } from '@ant-design/pro-components';
-import React, { useRef, useState } from 'react';
-import SpiderDetail from './components/SpiderDetail';
-import SpiderTest from './components/SpiderTest';
-import { spiderList } from './service';
-import type { SpiderItem } from './data.d';
+import { PageContainer, ProTable } from "@ant-design/pro-components";
+import { useQuery } from "@tanstack/react-query";
+import { Button, Space, Tag, Tooltip, Typography, Modal } from "antd";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
+import React, { useRef, useState } from "react";
+import SpiderDetail from "./components/SpiderDetail";
+import SpiderTest from "./components/SpiderTest";
+import CreateForm from "./components/CreateForm";
+import { spiderList } from "./service";
+import type { SpiderItem } from "./data.d";
 
 const { Text } = Typography;
 
 /** 来源类型颜色映射 */
 const sourceTypeColor: Record<string, string> = {
-  mock: 'default',
-  rss: 'orange',
-  api: 'blue',
-  web: 'green',
+  mock: "default",
+  rss: "orange",
+  api: "blue",
+  web: "green",
 };
 
 const SpiderList: React.FC = () => {
+  const actionRef = useRef<ActionType | null>(null);
   const [detailCode, setDetailCode] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [testState, setTestState] = useState<{
@@ -26,11 +28,11 @@ const SpiderList: React.FC = () => {
     code: string | null;
     configFields: any[];
     displayName?: string;
-  }>({ open: false, code: null, configFields: [], displayName: '' });
+  }>({ open: false, code: null, configFields: [], displayName: "" });
 
   // 使用 react-query 获取数据（不依赖 ProTable 的 request，手动控制）
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['spider-list'],
+    queryKey: ["spider-list"],
     queryFn: async () => {
       const res = await spiderList();
       return res;
@@ -55,114 +57,103 @@ const SpiderList: React.FC = () => {
 
   const columns: ProColumns<SpiderItem>[] = [
     {
-      title: '爬虫名称',
-      dataIndex: 'displayName',
-      key: 'displayName',
+      title: "爬虫名称",
+      dataIndex: "displayName",
+      key: "displayName",
       width: 150,
       render: (_, r) => (
-        <a
-          onClick={() => handleDetail(r.code)}
-          style={{ fontWeight: 500 }}
-        >
+        <a onClick={() => handleDetail(r.code)} style={{ fontWeight: 500 }}>
           {r.displayName}
         </a>
       ),
     },
     {
-      title: '编码',
-      dataIndex: 'code',
-      key: 'code',
+      title: "编码",
+      dataIndex: "code",
+      key: "code",
       width: 120,
       render: (_, r) => <Text code>{r.code}</Text>,
     },
     {
-      title: '来源类型',
-      dataIndex: 'sourceType',
-      key: 'sourceType',
+      title: "来源类型",
+      dataIndex: "sourceType",
+      key: "sourceType",
       width: 100,
       render: (_, r) => (
-        <Tag color={sourceTypeColor[r.sourceType] || 'default'}>{r.sourceType}</Tag>
+        <Tag color={sourceTypeColor[r.sourceType] || "default"}>
+          {r.sourceType}
+        </Tag>
       ),
     },
     {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
+      title: "描述",
+      dataIndex: "description",
+      key: "description",
       ellipsis: true,
       width: 250,
       render: (_, r) => (
         <Tooltip title={r.description}>
-          <span>{r.description || '-'}</span>
+          <span>{r.description || "-"}</span>
         </Tooltip>
       ),
     },
     {
-      title: '标签',
-      dataIndex: 'tags',
-      key: 'tags',
+      title: "标签",
+      dataIndex: "tags",
+      key: "tags",
       width: 180,
       render: (_, r) =>
-        r.tags?.length ? (
-          r.tags.map((t) => (
-            <Tag key={t} color="geekblue">
-              {t}
-            </Tag>
-          ))
-        ) : (
-          '-'
-        ),
+        r.tags?.length
+          ? r.tags.map((t) => (
+              <Tag key={t} color="geekblue">
+                {t}
+              </Tag>
+            ))
+          : "-",
     },
     {
-      title: '版本',
-      dataIndex: 'version',
-      key: 'version',
+      title: "版本",
+      dataIndex: "version",
+      key: "version",
       width: 80,
       render: (_, r) => <Tag color="blue">{r.version}</Tag>,
     },
     {
-      title: '关联任务',
-      dataIndex: 'taskCount',
-      key: 'taskCount',
+      title: "关联任务",
+      dataIndex: "taskCount",
+      key: "taskCount",
       width: 90,
-      align: 'center',
+      align: "center",
       render: (_, r) => r.taskCount || 0,
     },
     {
-      title: '执行次数',
-      dataIndex: 'jobCount',
-      key: 'jobCount',
+      title: "执行次数",
+      dataIndex: "jobCount",
+      key: "jobCount",
       width: 90,
-      align: 'center',
+      align: "center",
       render: (_, r) => r.jobCount || 0,
     },
     {
-      title: '采集数据量',
-      dataIndex: 'totalItems',
-      key: 'totalItems',
+      title: "采集数据量",
+      dataIndex: "totalItems",
+      key: "totalItems",
       width: 100,
-      align: 'center',
+      align: "center",
       render: (_, r) => r.totalItems || 0,
     },
     {
-      title: '操作',
-      key: 'action',
+      title: "操作",
+      key: "action",
       width: 160,
       search: false,
-      fixed: 'right',
+      fixed: "right",
       render: (_, r) => (
         <Space>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => handleDetail(r.code)}
-          >
+          <Button type="link" size="small" onClick={() => handleDetail(r.code)}>
             详情
           </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => handleTest(r)}
-          >
+          <Button type="link" size="small" onClick={() => handleTest(r)}>
             测试
           </Button>
         </Space>
@@ -173,7 +164,7 @@ const SpiderList: React.FC = () => {
   return (
     <PageContainer
       header={{
-        title: '爬虫管理',
+        title: "爬虫管理",
         breadcrumb: {},
       }}
     >
@@ -189,6 +180,9 @@ const SpiderList: React.FC = () => {
           fullScreen: false,
           setting: false,
         }}
+        toolBarRender={() => [
+          <CreateForm key="create" reload={actionRef.current?.reload} />,
+        ]}
         pagination={false}
         scroll={{ x: 1300 }}
       />
@@ -207,7 +201,12 @@ const SpiderList: React.FC = () => {
       <SpiderTest
         open={testState.open}
         onClose={() =>
-          setTestState({ open: false, code: null, configFields: [], displayName: '' })
+          setTestState({
+            open: false,
+            code: null,
+            configFields: [],
+            displayName: "",
+          })
         }
         spiderCode={testState.code}
         configFields={testState.configFields}

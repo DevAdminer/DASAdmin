@@ -6,12 +6,12 @@ import {
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, message } from 'antd';
-import React, { useState } from 'react';
-import { taskOptions, taskUpdate } from '../service';
-import type { TaskItem, TaskUpdateParams } from '../data.d';
+} from "@ant-design/pro-components";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button, message } from "antd";
+import React, { useState } from "react";
+import { taskOptions, taskUpdate } from "../service";
+import type { TaskItem, TaskUpdateParams } from "../data";
 
 interface UpdateFormProps {
   values: TaskItem;
@@ -20,11 +20,11 @@ interface UpdateFormProps {
 
 /** JSON 对象转格式化字符串 */
 function jsonToText(val?: Record<string, any> | null): string {
-  if (!val) return '';
+  if (!val) return "";
   try {
     return JSON.stringify(val, null, 2);
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -45,8 +45,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
   const { mutateAsync: run, isPending: loading } = useMutation({
     mutationFn: taskUpdate,
     onSuccess: () => {
-      messageApi.success('更新成功');
-      queryClient.invalidateQueries({ queryKey: ['task'] });
+      messageApi.success("更新成功");
+      queryClient.invalidateQueries({ queryKey: ["task"] });
       onOk?.();
     },
   });
@@ -66,11 +66,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
     };
 
     if (params.runType === 0 && !params.cronExpr) {
-      messageApi.error('定时任务必须填写 Cron 表达式');
+      messageApi.error("定时任务必须填写 Cron 表达式");
       return false;
     }
     if (params.runType === 1 && !params.intervalSeconds) {
-      messageApi.error('间隔任务必须填写间隔秒数');
+      messageApi.error("间隔任务必须填写间隔秒数");
       return false;
     }
 
@@ -116,7 +116,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
             name="taskName"
             label="任务名称"
             width="lg"
-            rules={[{ required: true, message: '请输入任务名称' }]}
+            rules={[{ required: true, message: "请输入任务名称" }]}
           />
           <ProFormTextArea
             name="description"
@@ -129,7 +129,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
             label="选择爬虫"
             width="lg"
             disabled={spiderDisabled}
-            placeholder={spiderDisabled ? '启用状态不可修改爬虫' : '请选择'}
+            placeholder={spiderDisabled ? "启用状态不可修改爬虫" : "请选择"}
             request={async () => {
               const res = await taskOptions();
               return res.data.spiders.map((s) => ({
@@ -154,12 +154,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
             name="runType"
             label="调度类型"
             options={[
-              { value: 0, label: '定时调度' },
-              { value: 1, label: '间隔执行' },
-              { value: 2, label: '手动触发' },
+              { value: 0, label: "定时调度" },
+              { value: 1, label: "间隔执行" },
+              { value: 2, label: "手动触发" },
             ]}
           />
-          <ProFormDependency name={['runType']}>
+          <ProFormDependency name={["runType"]}>
             {({ runType }) => {
               if (runType === 0) {
                 return (
@@ -167,7 +167,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
                     name="cronExpr"
                     label="Cron 表达式"
                     width="lg"
-                    rules={[{ required: true, message: '请输入 Cron 表达式' }]}
+                    rules={[{ required: true, message: "请输入 Cron 表达式" }]}
                   />
                 );
               }
@@ -179,7 +179,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
                     width="lg"
                     min={1}
                     max={86400}
-                    rules={[{ required: true, message: '请输入间隔秒数' }]}
+                    rules={[{ required: true, message: "请输入间隔秒数" }]}
                   />
                 );
               }

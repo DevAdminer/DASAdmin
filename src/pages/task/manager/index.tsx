@@ -1,51 +1,51 @@
-import { DownOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { useMutation } from '@tanstack/react-query';
-import { Button, Dropdown, Modal, Space, Tag, message } from 'antd';
-import React, { useRef, useState } from 'react';
-import CreateForm from './components/CreateForm';
-import JobDrawer from './components/JobDrawer';
-import TaskDetail from './components/TaskDetail';
-import UpdateForm from './components/UpdateForm';
-import type { TaskItem } from './data.d';
+import { DownOutlined } from "@ant-design/icons";
+import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import {
-  taskDelete,
-  taskList,
-  taskToggleStatus,
-  taskTrigger,
-} from './service';
+  PageContainer,
+  ProTable,
+  FooterToolbar,
+} from "@ant-design/pro-components";
+import { FormattedMessage, useIntl } from "@umijs/max";
+import { useMutation } from "@tanstack/react-query";
+import { Button, Dropdown, Modal, Space, Tag, message } from "antd";
+import React, { useRef, useState, useCallback } from "react";
+import CreateForm from "./components/CreateForm";
+import JobDrawer from "./components/JobDrawer";
+import TaskDetail from "./components/TaskDetail";
+import UpdateForm from "./components/UpdateForm";
+import type { TaskItem } from "./data";
+import { taskDelete, taskList, taskToggleStatus, taskTrigger } from "./service";
 
 const statusMap: Record<number, { text: string; color: string }> = {
-  0: { text: '草稿', color: 'default' },
-  1: { text: '启用', color: 'success' },
-  2: { text: '暂停', color: 'warning' },
+  0: { text: "草稿", color: "default" },
+  1: { text: "启用", color: "success" },
+  2: { text: "暂停", color: "warning" },
 };
 
 const runTypeMap: Record<number, string> = {
-  0: '定时调度',
-  1: '间隔执行',
-  2: '手动触发',
+  0: "定时调度",
+  1: "间隔执行",
+  2: "手动触发",
 };
 
 const TaskManager: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
-
+  const [selectedRowsState, setSelectedRows] = useState<API.RuleListItem[]>([]);
   // 详情抽屉
   const [detailTaskId, setDetailTaskId] = useState<number | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
   // Job 抽屉
   const [jobTaskId, setJobTaskId] = useState<number | null>(null);
-  const [jobTaskName, setJobTaskName] = useState<string>('');
+  const [jobTaskName, setJobTaskName] = useState<string>("");
   const [jobOpen, setJobOpen] = useState(false);
 
-  const { mutateAsync: toggleRun, isPending: toggleLoading } = useMutation({
+  const { mutateAsync: toggleRun, isPending: loading } = useMutation({
     mutationFn: (vars: { id: number; status: number }) =>
       taskToggleStatus(vars.id, vars.status),
     onSuccess: () => {
-      messageApi.success('操作成功');
+      messageApi.success("操作成功");
       actionRef.current?.reload();
     },
   });
@@ -61,15 +61,38 @@ const TaskManager: React.FC = () => {
   const { mutateAsync: deleteRun } = useMutation({
     mutationFn: (id: number) => taskDelete(id),
     onSuccess: () => {
-      messageApi.success('删除成功');
+      messageApi.success("删除成功");
       actionRef.current?.reload();
     },
   });
 
+  /**
+   *  Delete node
+   * @zh-CN 删除节点
+   *
+   * @param selectedRows
+   */
+  const handleRemove = useCallback(
+    async (selectedRows: API.RuleListItem[]) => {
+      if (!selectedRows?.length) {
+        messageApi.warning("请选择删除项");
+
+        return;
+      }
+
+      // await toggleRun({
+      //   data: {
+      //     key: selectedRows.map((row) => row.key),
+      //   },
+      // });
+    },
+    [toggleRun, messageApi.warning]
+  );
+
   const columns: ProColumns<TaskItem>[] = [
     {
-      title: '任务名称',
-      dataIndex: 'taskName',
+      title: "任务名称",
+      dataIndex: "taskName",
       width: 200,
       copyable: true,
       render: (_, record) => (
@@ -85,27 +108,27 @@ const TaskManager: React.FC = () => {
       ),
     },
     {
-      title: '编码',
-      dataIndex: 'taskCode',
+      title: "编码",
+      dataIndex: "taskCode",
       width: 160,
       copyable: true,
       search: false,
     },
     {
-      title: '爬虫',
-      dataIndex: 'spiderCode',
+      title: "爬虫",
+      dataIndex: "spiderCode",
       width: 120,
       copyable: true,
     },
     {
-      title: '状态',
-      dataIndex: 'status',
+      title: "状态",
+      dataIndex: "status",
       width: 90,
-      valueType: 'select',
+      valueType: "select",
       valueEnum: {
-        0: { text: '草稿' },
-        1: { text: '启用' },
-        2: { text: '暂停' },
+        0: { text: "草稿" },
+        1: { text: "启用" },
+        2: { text: "暂停" },
       },
       render: (_, record) => {
         const s = statusMap[record.status];
@@ -113,52 +136,52 @@ const TaskManager: React.FC = () => {
       },
     },
     {
-      title: '调度类型',
-      dataIndex: 'runType',
+      title: "调度类型",
+      dataIndex: "runType",
       width: 100,
-      valueType: 'select',
+      valueType: "select",
       valueEnum: {
-        0: { text: '定时调度' },
-        1: { text: '间隔执行' },
-        2: { text: '手动触发' },
+        0: { text: "定时调度" },
+        1: { text: "间隔执行" },
+        2: { text: "手动触发" },
       },
-      render: (_, record) => runTypeMap[record.runType] || '-',
+      render: (_, record) => runTypeMap[record.runType] || "-",
     },
     {
-      title: '执行次数',
-      dataIndex: 'jobCount',
+      title: "执行次数",
+      dataIndex: "jobCount",
       width: 80,
       search: false,
     },
     {
-      title: '成功次数',
-      dataIndex: 'successCount',
+      title: "成功次数",
+      dataIndex: "successCount",
       width: 80,
       search: false,
       renderText: (val: number) => (
-        <span style={{ color: val ? '#3f8600' : undefined }}>{val ?? 0}</span>
+        <span style={{ color: val ? "#3f8600" : undefined }}>{val ?? 0}</span>
       ),
     },
     {
-      title: '最后执行',
-      dataIndex: 'lastRunTime',
+      title: "最后执行",
+      dataIndex: "lastRunTime",
       width: 180,
       search: false,
-      valueType: 'dateTime',
+      valueType: "dateTime",
     },
     {
-      title: '创建时间',
-      dataIndex: 'createdAt',
+      title: "创建时间",
+      dataIndex: "createdAt",
       width: 180,
       search: false,
-      valueType: 'dateTime',
+      valueType: "dateTime",
     },
     {
-      title: '操作',
-      dataIndex: 'option',
-      valueType: 'option',
+      title: "操作",
+      dataIndex: "option",
+      valueType: "option",
       width: 200,
-      fixed: 'right',
+      fixed: "right",
       render: (_, record) => {
         const toggleBtn =
           record.status === 1 ? (
@@ -183,15 +206,15 @@ const TaskManager: React.FC = () => {
 
         const moreItems = [
           {
-            key: 'trigger',
-            label: '手动触发',
+            key: "trigger",
+            label: "手动触发",
             onClick: async () => {
               await triggerRun(record.id);
             },
           },
           {
-            key: 'jobs',
-            label: '执行记录',
+            key: "jobs",
+            label: "执行记录",
             onClick: () => {
               setJobTaskId(record.id);
               setJobTaskName(record.taskName);
@@ -199,19 +222,19 @@ const TaskManager: React.FC = () => {
             },
           },
           {
-            type: 'divider' as const,
+            type: "divider" as const,
           },
           {
-            key: 'delete',
-            label: '删除任务',
+            key: "delete",
+            label: "删除任务",
             danger: true,
             onClick: () => {
               Modal.confirm({
-                title: '确认删除',
+                title: "确认删除",
                 content: `确定要删除任务「${record.taskName}」吗？此操作不可恢复。`,
-                okText: '删除',
-                okType: 'danger',
-                cancelText: '取消',
+                okText: "删除",
+                okType: "danger",
+                cancelText: "取消",
                 onOk: async () => {
                   await deleteRun(record.id);
                 },
@@ -252,9 +275,61 @@ const TaskManager: React.FC = () => {
         toolBarRender={() => [
           <CreateForm key="create" reload={actionRef.current?.reload} />,
         ]}
+        rowSelection={{
+          onChange: (_, selectedRows) => {
+            setSelectedRows(selectedRows);
+          },
+        }}
+        pagination={{ pageSize: 10, showSizeChanger: true }}
         columns={columns}
         polling={30000}
       />
+      {selectedRowsState?.length > 0 && (
+        <FooterToolbar
+          extra={
+            <div>
+              <FormattedMessage
+                id="pages.searchTable.chosen"
+                defaultMessage="Chosen"
+              />{" "}
+              <span style={{ fontWeight: 600 }}>
+                {selectedRowsState.length}
+              </span>{" "}
+              <FormattedMessage
+                id="pages.searchTable.item"
+                defaultMessage="项"
+              />
+              &nbsp;&nbsp;
+              <span>
+                <FormattedMessage
+                  id="pages.searchTable.totalServiceCalls"
+                  defaultMessage="Total number of service calls"
+                />{" "}
+                {selectedRowsState.reduce(
+                  (pre, item) => pre + (item.callNo ?? 0),
+                  0
+                )}{" "}
+                <FormattedMessage
+                  id="pages.searchTable.tenThousand"
+                  defaultMessage="万"
+                />
+              </span>
+            </div>
+          }
+        >
+          <Button
+            loading={loading}
+            onClick={() => {
+              handleRemove(selectedRowsState);
+            }}
+          >
+            <FormattedMessage
+              id="pages.searchTable.batchDeletion"
+              defaultMessage="Batch deletion"
+            />
+          </Button>
+        </FooterToolbar>
+      )}
 
       {/* 任务详情 */}
       <TaskDetail

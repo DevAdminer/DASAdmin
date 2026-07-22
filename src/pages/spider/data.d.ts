@@ -7,7 +7,7 @@
 export interface ConfigField {
   field: string;
   label: string;
-  type: 'string' | 'number' | 'select' | 'json';
+  type: "string" | "number" | "select" | "json";
   required?: boolean;
   default?: any;
   placeholder?: string;
@@ -65,6 +65,21 @@ export interface SpiderDetail extends SpiderItem {
   recentJobs: SpiderRecentJob[];
 }
 
+/** 创建爬虫参数 */
+export interface SpiderCreateParams {
+  taskName: string;
+  taskCode: string;
+  description?: string;
+  spiderCode: string;
+  spiderConfig?: Record<string, any>;
+  pipelineConfig?: Record<string, any>;
+  status?: TaskStatus;
+  runType?: RunType;
+  cronExpr?: string;
+  intervalSeconds?: number;
+  tags?: string;
+}
+
 /** 测试爬取结果项 */
 export interface CrawlResultItem {
   title: string;
@@ -106,6 +121,6 @@ export interface PageResult<T> {
 /** 后端统一响应 */
 export interface ApiResponse<T = any> {
   msg: string;
-  status: 'ok' | 'error';
+  status: "ok" | "error";
   data: T;
 }

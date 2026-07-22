@@ -2,20 +2,20 @@ import type {
   ActionType,
   ProColumns,
   ProDescriptionsItemProps,
-} from '@ant-design/pro-components';
+} from "@ant-design/pro-components";
 import {
   FooterToolbar,
   PageContainer,
   ProDescriptions,
   ProTable,
-} from '@ant-design/pro-components';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { FormattedMessage, useIntl } from '@umijs/max';
-import { Button, Drawer, type FormInstance, Input, message } from 'antd';
-import React, { useCallback, useRef, useState } from 'react';
-import { removeRule, rule } from '@/services/ant-design-pro/api';
-import CreateForm from './components/CreateForm';
-import UpdateForm from './components/UpdateForm';
+} from "@ant-design/pro-components";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { FormattedMessage, useIntl } from "@umijs/max";
+import { Button, Drawer, type FormInstance, Input, message } from "antd";
+import React, { useCallback, useRef, useState } from "react";
+import { removeRule, rule } from "@/services/ant-design-pro/api";
+import CreateForm from "./components/CreateForm";
+import UpdateForm from "./components/UpdateForm";
 
 const TableList: React.FC = () => {
   const actionRef = useRef<ActionType | null>(null);
@@ -38,12 +38,12 @@ const TableList: React.FC = () => {
     onSuccess: () => {
       setSelectedRows([]);
       actionRef.current?.reloadAndRest?.();
-      queryClient.invalidateQueries({ queryKey: ['rule'] });
+      queryClient.invalidateQueries({ queryKey: ["rule"] });
 
-      messageApi.success('Deleted successfully and will refresh soon');
+      messageApi.success("Deleted successfully and will refresh soon");
     },
     onError: () => {
-      messageApi.error('Delete failed, please try again');
+      messageApi.error("Delete failed, please try again");
     },
   });
 
@@ -55,7 +55,7 @@ const TableList: React.FC = () => {
           defaultMessage="Rule name"
         />
       ),
-      dataIndex: 'name',
+      dataIndex: "name",
       render: (dom, entity) => {
         return (
           <Button
@@ -77,8 +77,8 @@ const TableList: React.FC = () => {
           defaultMessage="Description"
         />
       ),
-      dataIndex: 'desc',
-      valueType: 'textarea',
+      dataIndex: "desc",
+      valueType: "textarea",
     },
     {
       title: (
@@ -87,13 +87,13 @@ const TableList: React.FC = () => {
           defaultMessage="Number of service calls"
         />
       ),
-      dataIndex: 'callNo',
+      dataIndex: "callNo",
       sorter: true,
       hideInForm: true,
       renderText: (val: string) =>
         `${val}${intl.formatMessage({
-          id: 'pages.searchTable.tenThousand',
-          defaultMessage: ' 万 ',
+          id: "pages.searchTable.tenThousand",
+          defaultMessage: " 万 ",
         })}`,
     },
     {
@@ -103,7 +103,7 @@ const TableList: React.FC = () => {
           defaultMessage="Status"
         />
       ),
-      dataIndex: 'status',
+      dataIndex: "status",
       hideInForm: true,
       valueEnum: {
         0: {
@@ -113,7 +113,7 @@ const TableList: React.FC = () => {
               defaultMessage="Shut down"
             />
           ),
-          status: 'Default',
+          status: "Default",
         },
         1: {
           text: (
@@ -122,7 +122,7 @@ const TableList: React.FC = () => {
               defaultMessage="Running"
             />
           ),
-          status: 'Processing',
+          status: "Processing",
         },
         2: {
           text: (
@@ -131,7 +131,7 @@ const TableList: React.FC = () => {
               defaultMessage="Online"
             />
           ),
-          status: 'Success',
+          status: "Success",
         },
         3: {
           text: (
@@ -140,7 +140,7 @@ const TableList: React.FC = () => {
               defaultMessage="Abnormal"
             />
           ),
-          status: 'Error',
+          status: "Error",
         },
       },
     },
@@ -152,8 +152,8 @@ const TableList: React.FC = () => {
         />
       ),
       sorter: true,
-      dataIndex: 'updatedAt',
-      valueType: 'dateTime',
+      dataIndex: "updatedAt",
+      valueType: "dateTime",
       formItemRender: (
         item: ProColumns<API.RuleListItem>,
         {
@@ -161,22 +161,22 @@ const TableList: React.FC = () => {
           ...rest
         }: {
           defaultRender: (
-            item: ProColumns<API.RuleListItem>,
+            item: ProColumns<API.RuleListItem>
           ) => React.ReactNode;
         },
-        form: FormInstance,
+        form: FormInstance
       ) => {
-        const status = form.getFieldValue('status');
-        if (`${status}` === '0') {
+        const status = form.getFieldValue("status");
+        if (`${status}` === "0") {
           return false;
         }
-        if (`${status}` === '3') {
+        if (`${status}` === "3") {
           return (
             <Input
               {...rest}
               placeholder={intl.formatMessage({
-                id: 'pages.searchTable.exception',
-                defaultMessage: 'Please enter the reason for the exception!',
+                id: "pages.searchTable.exception",
+                defaultMessage: "Please enter the reason for the exception!",
               })}
             />
           );
@@ -191,8 +191,8 @@ const TableList: React.FC = () => {
           defaultMessage="Operating"
         />
       ),
-      dataIndex: 'option',
-      valueType: 'option',
+      dataIndex: "option",
+      valueType: "option",
       render: (_, record) => [
         <UpdateForm
           trigger={
@@ -226,7 +226,7 @@ const TableList: React.FC = () => {
   const handleRemove = useCallback(
     async (selectedRows: API.RuleListItem[]) => {
       if (!selectedRows?.length) {
-        messageApi.warning('请选择删除项');
+        messageApi.warning("请选择删除项");
 
         return;
       }
@@ -237,7 +237,7 @@ const TableList: React.FC = () => {
         },
       });
     },
-    [delRun, messageApi.warning],
+    [delRun, messageApi.warning]
   );
 
   return (
@@ -245,8 +245,8 @@ const TableList: React.FC = () => {
       {contextHolder}
       <ProTable<API.RuleListItem, API.PageParams>
         headerTitle={intl.formatMessage({
-          id: 'pages.searchTable.title',
-          defaultMessage: 'Enquiry form',
+          id: "pages.searchTable.title",
+          defaultMessage: "Enquiry form",
         })}
         actionRef={actionRef}
         rowKey="key"
@@ -271,10 +271,10 @@ const TableList: React.FC = () => {
               <FormattedMessage
                 id="pages.searchTable.chosen"
                 defaultMessage="Chosen"
-              />{' '}
+              />{" "}
               <span style={{ fontWeight: 600 }}>
                 {selectedRowsState.length}
-              </span>{' '}
+              </span>{" "}
               <FormattedMessage
                 id="pages.searchTable.item"
                 defaultMessage="项"
@@ -284,11 +284,11 @@ const TableList: React.FC = () => {
                 <FormattedMessage
                   id="pages.searchTable.totalServiceCalls"
                   defaultMessage="Total number of service calls"
-                />{' '}
+                />{" "}
                 {selectedRowsState.reduce(
                   (pre, item) => pre + (item.callNo ?? 0),
-                  0,
-                )}{' '}
+                  0
+                )}{" "}
                 <FormattedMessage
                   id="pages.searchTable.tenThousand"
                   defaultMessage="万"

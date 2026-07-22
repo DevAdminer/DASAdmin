@@ -1,4 +1,4 @@
-import { request } from '@umijs/max';
+import { request } from "@umijs/max";
 import type {
   SpiderItem,
   SpiderDetail,
@@ -6,26 +6,35 @@ import type {
   CrawlResultItem,
   PageResult,
   SpiderTasksParams,
-} from './data.d';
+  SpiderCreateParams,
+} from "./data.d";
 
 // 复用 manager 模块的 TaskItem 类型（避免循环依赖，直接 import）
-import type { TaskItem } from '../manager/data.d';
+import type { TaskItem } from "../task/manager/data";
 
 /**
  * 爬虫列表（含使用统计）
  */
 export async function spiderList(): Promise<SpiderItem[]> {
-  const res = await request<{ data: SpiderItem[] }>('/api/spider/list', {
-    method: 'GET',
+  const res = await request<{ data: SpiderItem[] }>("/api/spider/list", {
+    method: "GET",
   });
   return res.data;
 }
 
 /** 爬虫详情（含完整统计+最近执行） */
 export async function spiderDetail(code: string) {
-  return request<{ data: SpiderDetail }>('/api/spider/detail', {
-    method: 'GET',
+  return request<{ data: SpiderDetail }>("/api/spider/detail", {
+    method: "GET",
     params: { code },
+  });
+}
+
+/** 创建爬虫 */
+export async function taskCreate(data: SpiderCreateParams) {
+  return request<{ data: { id: number } }>("/api/task/create", {
+    method: "POST",
+    data,
   });
 }
 
@@ -38,10 +47,10 @@ export async function spiderDetail(code: string) {
 export async function spiderTest(
   code: string,
   config: Record<string, any> | null,
-  limit: number = 5,
+  limit: number = 5
 ) {
-  return request<{ data: SpiderTestResult }>('/api/spider/test', {
-    method: 'POST',
+  return request<{ data: SpiderTestResult }>("/api/spider/test", {
+    method: "POST",
     data: { code, config, limit },
   });
 }
@@ -53,16 +62,19 @@ export async function spiderTasks(
   params: SpiderTasksParams & {
     current?: number;
     pageSize?: number;
-  },
+  }
 ) {
-  const res = await request<{ data: PageResult<TaskItem> }>('/api/spider/tasks', {
-    method: 'POST',
-    data: {
-      code: params.code,
-      page: params.current || 1,
-      pageSize: params.pageSize || 10,
-    },
-  });
+  const res = await request<{ data: PageResult<TaskItem> }>(
+    "/api/spider/tasks",
+    {
+      method: "POST",
+      data: {
+        code: params.code,
+        page: params.current || 1,
+        pageSize: params.pageSize || 10,
+      },
+    }
+  );
   return {
     data: res.data.list,
     total: res.data.total,

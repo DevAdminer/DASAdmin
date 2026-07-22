@@ -1,4 +1,4 @@
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined } from "@ant-design/icons";
 import {
   type ActionType,
   ProFormDependency,
@@ -8,15 +8,15 @@ import {
   ProFormText,
   ProFormTextArea,
   StepsForm,
-} from '@ant-design/pro-components';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, Drawer, message } from 'antd';
-import React, { useState } from 'react';
-import { taskCreate, taskOptions } from '../service';
-import type { TaskCreateParams } from '../data.d';
+} from "@ant-design/pro-components";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button, Drawer, message, Modal } from "antd";
+import React, { useState } from "react";
+import { taskCreate } from "../service";
+import type { SpiderCreateParams } from "../data";
 
 interface CreateFormProps {
-  reload?: ActionType['reload'];
+  reload?: ActionType["reload"];
 }
 
 /** 尝试解析 JSON，失败返回原始字符串 */
@@ -37,15 +37,15 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
   const { mutateAsync: run, isPending: loading } = useMutation({
     mutationFn: taskCreate,
     onSuccess: () => {
-      messageApi.success('任务创建成功');
-      queryClient.invalidateQueries({ queryKey: ['task'] });
+      messageApi.success("任务创建成功");
+      queryClient.invalidateQueries({ queryKey: ["task"] });
       reload?.();
     },
   });
 
   const onFinish = async (values: any) => {
     // 解析 JSON 配置字段
-    const params: TaskCreateParams = {
+    const params: SpiderCreateParams = {
       taskName: values.taskName,
       taskCode: values.taskCode,
       description: values.description,
@@ -61,11 +61,11 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
 
     // 调度校验
     if (params.runType === 0 && !params.cronExpr) {
-      messageApi.error('定时任务必须填写 Cron 表达式');
+      messageApi.error("定时任务必须填写 Cron 表达式");
       return false;
     }
     if (params.runType === 1 && !params.intervalSeconds) {
-      messageApi.error('间隔任务必须填写间隔秒数');
+      messageApi.error("间隔任务必须填写间隔秒数");
       return false;
     }
 
@@ -91,19 +91,19 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
       <StepsForm
         onFinish={onFinish}
         formProps={{
-          validateMessages: { required: '此项为必填项' },
+          validateMessages: { required: "此项为必填项" },
         }}
         stepsFormRender={(dom, submitter) => (
-          <Drawer
+          <Modal
             title="新建采集任务"
             width={720}
             open={open}
-            onClose={() => setOpen(false)}
+            onCancel={() => setOpen(false)}
             footer={submitter}
             destroyOnHidden
           >
             {dom}
-          </Drawer>
+          </Modal>
         )}
       >
         {/* Step 1: 基本信息 */}
@@ -117,7 +117,7 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
             label="任务名称"
             width="lg"
             placeholder="请输入任务名称"
-            rules={[{ required: true, message: '请输入任务名称' }]}
+            rules={[{ required: true, message: "请输入任务名称" }]}
           />
           <ProFormText
             name="taskCode"
@@ -125,10 +125,10 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
             width="lg"
             placeholder="唯一标识，如：news_spider_daily"
             rules={[
-              { required: true, message: '请输入任务编码' },
+              { required: true, message: "请输入任务编码" },
               {
                 pattern: /^[a-zA-Z0-9_]+$/,
-                message: '仅支持字母、数字和下划线',
+                message: "仅支持字母、数字和下划线",
               },
             ]}
           />
@@ -147,50 +147,19 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
           />
         </StepsForm.StepForm>
 
-        {/* Step 2: 爬虫配置 */}
-        <StepsForm.StepForm name="spider" title="爬虫配置">
-          <ProFormSelect
-            name="spiderCode"
-            label="选择爬虫"
-            width="lg"
-            placeholder="请选择爬虫插件"
-            rules={[{ required: true, message: '请选择爬虫' }]}
-            request={async () => {
-              const res = await taskOptions();
-              return res.data.spiders.map((s) => ({
-                label: `${s.name} (${s.code})`,
-                value: s.code,
-              }));
-            }}
-          />
-          <ProFormTextArea
-            name="spiderConfigText"
-            label="爬虫配置参数（JSON）"
-            width="lg"
-            placeholder='{"keyword": "AI", "limit": 10}'
-            fieldProps={{ autoSize: { minRows: 3, maxRows: 6 } }}
-          />
-          <ProFormTextArea
-            name="pipelineConfigText"
-            label="数据处理流水线配置（JSON）"
-            width="lg"
-            placeholder='{"pipeline": ["clean", "deduplicate"]}'
-            fieldProps={{ autoSize: { minRows: 3, maxRows: 6 } }}
-          />
-        </StepsForm.StepForm>
-
         {/* Step 3: 调度设置 */}
         <StepsForm.StepForm name="schedule" title="调度设置">
           <ProFormRadio.Group
             name="runType"
             label="调度类型"
+            rules={[{ required: true, message: "请选择调度类型" }]}
             options={[
-              { value: 0, label: '定时调度（Cron）' },
-              { value: 1, label: '间隔执行' },
-              { value: 2, label: '手动触发' },
+              { value: 0, label: "定时调度（Cron）" },
+              { value: 1, label: "间隔执行" },
+              { value: 2, label: "手动触发" },
             ]}
           />
-          <ProFormDependency name={['runType']}>
+          <ProFormDependency name={["runType"]}>
             {({ runType }) => {
               if (runType === 0) {
                 return (
@@ -199,7 +168,7 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
                     label="Cron 表达式"
                     width="lg"
                     placeholder="如：0 2 * * *（每天凌晨2点）"
-                    rules={[{ required: true, message: '请输入 Cron 表达式' }]}
+                    rules={[{ required: true, message: "请输入 Cron 表达式" }]}
                   />
                 );
               }
@@ -212,9 +181,7 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
                     min={1}
                     max={86400}
                     placeholder="如：3600（每小时）"
-                    rules={[
-                      { required: true, message: '请输入间隔秒数' },
-                    ]}
+                    rules={[{ required: true, message: "请输入间隔秒数" }]}
                   />
                 );
               }
@@ -224,10 +191,11 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
           <ProFormRadio.Group
             name="status"
             label="初始状态"
+            rules={[{ required: true, message: "请选择初始状态" }]}
             options={[
-              { value: 0, label: '草稿' },
-              { value: 1, label: '启用' },
-              { value: 2, label: '暂停' },
+              { value: 0, label: "草稿" },
+              { value: 1, label: "启用" },
+              { value: 2, label: "暂停" },
             ]}
           />
         </StepsForm.StepForm>
@@ -236,7 +204,7 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
         <StepsForm.StepForm name="confirm" title="确认提交">
           <div style={{ marginBottom: 16 }}>
             <h3>请确认任务信息无误后提交</h3>
-            <p style={{ color: 'rgba(0,0,0,0.45)' }}>
+            <p style={{ color: "rgba(0,0,0,0.45)" }}>
               提交后任务将创建成功，可在任务列表中查看和管理。
             </p>
           </div>
