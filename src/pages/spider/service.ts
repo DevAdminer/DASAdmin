@@ -7,6 +7,7 @@ import type {
   PageResult,
   SpiderTasksParams,
   SpiderCreateParams,
+  ProTableResult,
 } from "./data.d";
 
 // 复用 manager 模块的 TaskItem 类型（避免循环依赖，直接 import）
@@ -15,15 +16,30 @@ import type { TaskItem } from "../task/manager/data";
 /**
  * 爬虫列表（含使用统计）
  */
-export async function spiderList(): Promise<SpiderItem[]> {
-  const res = await request<{ data: SpiderItem[] }>("/api/spider/list", {
-    method: "GET",
-  });
-  return res.data;
+export async function spiderList(params: {
+  current?: number;
+  pageSize?: number;
+}): Promise<ProTableResult<SpiderItem>> {
+  const res = await request<{ data: PageResult<SpiderItem> }>(
+    "/api/spider/list",
+    {
+      method: "POST",
+      data: {
+        page: params.current || 1,
+        pageSize: params.pageSize || 10,
+      },
+    }
+  );
+  return {
+    data: res.data.list,
+    total: res.data.total,
+    success: true,
+  };
 }
 
 /** 爬虫详情（含完整统计+最近执行） */
 export async function spiderDetail(code: string) {
+  console.log("Fetching spider detail for code:", code);
   return request<{ data: SpiderDetail }>("/api/spider/detail", {
     method: "GET",
     params: { code },
@@ -31,8 +47,8 @@ export async function spiderDetail(code: string) {
 }
 
 /** 创建爬虫 */
-export async function taskCreate(data: SpiderCreateParams) {
-  return request<{ data: { id: number } }>("/api/task/create", {
+export async function spiderCreate(data: SpiderCreateParams) {
+  return request<{ data: { id: number } }>("/api/spider/create", {
     method: "POST",
     data,
   });
@@ -80,4 +96,19 @@ export async function spiderTasks(
     total: res.data.total,
     success: true,
   };
+}
+
+/** 启用/禁用爬虫 */
+export async function spiderToggleStatus(code: string, status: number) {
+  return request(`/api/spider/${code}/toggle-status`, { method: "POST", data: { status } });
+}
+
+/** 删除爬虫 */
+export async function spiderDelete(id: number) {
+  return request(`/api/spider/${id}`, { method: "DELETE" });
+}
+
+/** 爬虫模板列表 */
+export async function spiderTemplateList(params: { current?: number; pageSize?: number }) {
+  return request<{ data: PageResult<any> }>("/api/spider-template/list", { method: "POST", data: { page: params.current || 1, pageSize: params.pageSize || 100 } });
 }

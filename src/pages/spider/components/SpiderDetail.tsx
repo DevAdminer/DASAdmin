@@ -44,6 +44,12 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
   open,
   onClose,
 }) => {
+  console.log(
+    "SpiderDetail component rendered with spiderCode:",
+    spiderCode,
+    "and open:",
+    open
+  );
   const { data: detailRes, isLoading } = useQuery({
     queryKey: ["spider-detail", spiderCode],
     queryFn: () => spiderDetail(spiderCode!),

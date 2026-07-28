@@ -5,6 +5,7 @@ import {
   ProFormDigit,
   ProFormRadio,
   ProFormSelect,
+  ProFormSwitch,
   ProFormText,
   ProFormTextArea,
   StepsForm,
@@ -12,11 +13,18 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Drawer, message, Modal } from "antd";
 import React, { useState } from "react";
-import { taskCreate } from "../service";
-import type { SpiderCreateParams } from "../data";
-
+import { spiderCreate } from "../service";
+import type { SpiderCreateParams } from "../data.d";
 interface CreateFormProps {
   reload?: ActionType["reload"];
+}
+
+const enum SpiderType {
+  REQUESTS = "requests",
+  PLAYWRIGHT = "playwright",
+  SCRAPY = "scrapy",
+  API = "api",
+  CUSTOM = "custom",
 }
 
 /** 尝试解析 JSON，失败返回原始字符串 */
@@ -28,16 +36,15 @@ function tryParseJSON(str?: string): Record<string, any> | undefined {
     return undefined;
   }
 }
-
 const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
   const [open, setOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const queryClient = useQueryClient();
 
   const { mutateAsync: run, isPending: loading } = useMutation({
-    mutationFn: taskCreate,
+    mutationFn: spiderCreate,
     onSuccess: () => {
-      messageApi.success("任务创建成功");
+      messageApi.success("任务爬虫成功");
       queryClient.invalidateQueries({ queryKey: ["task"] });
       reload?.();
     },
@@ -86,7 +93,7 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
         icon={<PlusOutlined />}
         onClick={() => setOpen(true)}
       >
-        新建任务
+        新建爬虫
       </Button>
       <StepsForm
         onFinish={onFinish}
@@ -113,37 +120,39 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
           initialValues={{ status: 0, runType: 2 }}
         >
           <ProFormText
-            name="taskName"
-            label="任务名称"
+            name="name"
+            label="爬虫名称"
             width="lg"
-            placeholder="请输入任务名称"
-            rules={[{ required: true, message: "请输入任务名称" }]}
+            placeholder="请输入爬虫名称"
+            rules={[{ required: true, message: "如：通用新闻爬虫" }]}
           />
-          <ProFormText
-            name="taskCode"
-            label="任务编码"
+          <ProFormSelect
+            name="type"
+            label="爬虫类型"
             width="lg"
-            placeholder="唯一标识，如：news_spider_daily"
-            rules={[
-              { required: true, message: "请输入任务编码" },
-              {
-                pattern: /^[a-zA-Z0-9_]+$/,
-                message: "仅支持字母、数字和下划线",
-              },
+            placeholder="选择爬虫类型"
+            rules={[{ required: true, message: "请选择爬虫代码" }]}
+            options={[
+              { label: "Requests", value: SpiderType.REQUESTS },
+              { label: "Playwright", value: SpiderType.PLAYWRIGHT },
+              { label: "Scrapy", value: SpiderType.SCRAPY },
+              { label: "API", value: SpiderType.API },
+              { label: "自定义", value: SpiderType.CUSTOM },
             ]}
           />
-          <ProFormTextArea
-            name="description"
-            label="任务描述"
+          <ProFormText
+            name="version"
+            label="版本号"
             width="lg"
-            placeholder="描述任务用途"
-            fieldProps={{ autoSize: { minRows: 2, maxRows: 4 } }}
+            placeholder="请输入版本号"
+            rules={[{ required: true, message: "如：1.0.0" }]}
           />
           <ProFormText
-            name="tags"
-            label="标签"
+            name="url"
+            label="目标URL"
             width="lg"
-            placeholder="多个标签用逗号分隔"
+            placeholder="请输入目标URL"
+            rules={[{ required: true, message: "https://example.com" }]}
           />
         </StepsForm.StepForm>
 
@@ -197,6 +206,21 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
               { value: 1, label: "启用" },
               { value: 2, label: "暂停" },
             ]}
+          />
+          <ProFormSwitch
+            name="auto"
+            label="自动同步"
+            rules={[{ required: true, message: "请选择是否自动同步" }]}
+            initialValue={false}
+          />
+        </StepsForm.StepForm>
+
+        <StepsForm.StepForm name="description" title="描述信息">
+          <ProFormTextArea
+            name="description"
+            label="描述"
+            width="lg"
+            placeholder="爬虫功能描述"
           />
         </StepsForm.StepForm>
 

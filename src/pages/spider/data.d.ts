@@ -16,21 +16,27 @@ export interface ConfigField {
 
 /** 爬虫列表项 */
 export interface SpiderItem {
+  id: number;
+  name: string;
   code: string;
   displayName: string;
   description: string;
   version: string;
   author: string;
-  tags: string[];
+  tags: string;
   sourceType: string;
   className: string;
   configFields: ConfigField[];
+  status: number;       // 1=启用 0=禁用
+  isPlugin: number;     // 0=DB创建 1=插件注册
   // 统计字段（列表接口附加）
   taskCount: number;
   jobCount: number;
   successCount: number;
   failedCount: number;
   totalItems: number;
+  updatedAt: string;
+  createdAt: string;
 }
 
 /** 爬虫统计信息 */
@@ -123,4 +129,40 @@ export interface ApiResponse<T = any> {
   msg: string;
   status: "ok" | "error";
   data: T;
+}
+
+export enum SpiderType {
+  REQUESTS = "requests",
+  PLAYWRIGHT = "playwright",
+  SCRAPY = "scrapy",
+  API = "api",
+  CUSTOM = "custom",
+}
+
+/** 提取规则 */
+export interface ExtractRule {
+  field: string;
+  selector: string;
+  selector_type: "css" | "xpath" | "regex" | "json";
+  attribute?: string;
+  transform?: string[];
+  default_value?: string;
+  required?: boolean;
+  description?: string;
+}
+
+/** 分页规则 */
+export interface PaginationRule {
+  type: "url" | "click" | "scroll" | "button";
+  selector?: string;
+  next_page_selector?: string;
+  max_pages?: number;
+  page_param?: string;
+  page_size?: number;
+}
+/** ProTable request 返回格式 */
+export interface ProTableResult<T> {
+  data: T[];
+  total: number;
+  success: boolean;
 }
