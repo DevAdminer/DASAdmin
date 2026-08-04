@@ -22,7 +22,7 @@ import type {
 export async function taskList(params: {
   current?: number;
   pageSize?: number;
-  taskName?: string;
+  name?: string;
   spiderCode?: string;
   status?: number;
   runType?: number;
@@ -33,7 +33,7 @@ export async function taskList(params: {
     data: {
       page: params.current || 1,
       pageSize: params.pageSize || 10,
-      taskName: params.taskName,
+      name: params.name,
       spiderCode: params.spiderCode,
       status: params.status,
       runType: params.runType,
@@ -48,16 +48,16 @@ export async function taskList(params: {
 }
 
 /** 任务详情 */
-export async function taskDetail(id: number) {
+export async function taskDetail(uid: string) {
   return request<{ data: TaskItem }>("/api/task/detail", {
     method: "GET",
-    params: { id },
+    params: { uid },
   });
 }
 
 /** 创建任务 */
 export async function taskCreate(data: TaskCreateParams) {
-  return request<{ data: { id: number } }>("/api/task/create", {
+  return request<{ data: { uid: string } }>("/api/task/create", {
     method: "POST",
     data,
   });
@@ -65,35 +65,35 @@ export async function taskCreate(data: TaskCreateParams) {
 
 /** 更新任务 */
 export async function taskUpdate(data: TaskUpdateParams) {
-  return request<{ data: { id: number } }>("/api/task/update", {
+  return request<{ data: { uid: string } }>("/api/task/update", {
     method: "POST",
     data,
   });
 }
 
 /** 删除任务 */
-export async function taskDelete(id: number) {
-  return request<{ data: { id: number } }>("/api/task/delete", {
+export async function taskDelete(uid: string) {
+  return request<{ data: { uid: string } }>("/api/task/delete", {
     method: "POST",
-    data: { id },
+    data: { uid },
   });
 }
 
 /** 启用/暂停任务 */
-export async function taskToggleStatus(id: number, status: number) {
-  return request<{ data: any }>("/api/task/toggle-status", {
+export async function taskToggleStatus(uid: string, status: number) {
+  return request<{ data: any }>("/api/task/toggle", {
     method: "POST",
-    data: { id, status },
+    data: { uid, status },
   });
 }
 
 /** 手动触发任务 */
-export async function taskTrigger(id: number, triggerType = "manual") {
-  return request<{ data: { jobId: number; jobNo: string } }>(
+export async function taskTrigger(uid: string, triggerType = "manual") {
+  return request<{ data: { jobId: number; jobCode: string } }>(
     "/api/task/trigger",
     {
       method: "POST",
-      data: { id, triggerType },
+      data: { uid, triggerType },
     }
   );
 }
@@ -111,20 +111,18 @@ export async function taskOptions() {
 export async function jobList(params: {
   current?: number;
   pageSize?: number;
-  taskId?: number;
+  taskUid?: string;
   status?: string;
   triggerType?: string;
-  triggerBy?: string;
 }): Promise<ProTableResult<JobItem>> {
   const res = await request<{ data: PageResult<JobItem> }>("/api/job/list", {
     method: "POST",
     data: {
       page: params.current || 1,
       pageSize: params.pageSize || 10,
-      taskId: params.taskId,
+      taskUid: params.taskUid,
       status: params.status,
       triggerType: params.triggerType,
-      triggerBy: params.triggerBy,
     },
   });
   return {
@@ -135,46 +133,46 @@ export async function jobList(params: {
 }
 
 /** Job 详情 */
-export async function jobDetail(id: number) {
+export async function jobDetail(uid: string) {
   return request<{ data: JobItem }>("/api/job/detail", {
     method: "GET",
-    params: { id },
+    params: { uid },
   });
 }
 
 /** 取消 Job */
-export async function jobCancel(id: number) {
+export async function jobCancel(uid: string) {
   return request<{ data: any }>("/api/job/cancel", {
     method: "POST",
-    data: { id },
+    data: { uid },
   });
 }
 
 /** 重试 Job */
-export async function jobRetry(id: number) {
+export async function jobRetry(uid: string) {
   return request<{ data: any }>("/api/job/retry", {
     method: "POST",
-    data: { id },
+    data: { uid },
   });
 }
 
 /** Job 统计 */
-export async function jobStats(taskId?: number) {
+export async function jobStats(taskUid?: string) {
   return request<{ data: JobStats }>("/api/job/stats", {
     method: "GET",
-    params: { taskId },
+    params: { taskUid },
   });
 }
 
 /** Job 日志（分页） */
 export async function jobLogs(
-  jobId: number,
+  jobUid: string,
   params: { page?: number; pageSize?: number; level?: string }
 ) {
   return request<{ data: PageResult<JobLogItem> }>("/api/job/logs", {
     method: "GET",
     params: {
-      jobId,
+      uid: jobUid,
       page: params.page || 1,
       pageSize: params.pageSize || 50,
       level: params.level,
@@ -184,13 +182,13 @@ export async function jobLogs(
 
 /** Job 采集数据项（分页） */
 export async function jobItems(
-  jobId: number,
+  jobUid: string,
   params: { page?: number; pageSize?: number; keyword?: string }
 ) {
   return request<{ data: PageResult<JobDataItem> }>("/api/job/items", {
     method: "GET",
     params: {
-      jobId,
+      uid: jobUid,
       page: params.page || 1,
       pageSize: params.pageSize || 20,
       keyword: params.keyword,

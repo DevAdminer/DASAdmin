@@ -33,17 +33,17 @@ const TaskManager: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedRowsState, setSelectedRows] = useState<API.RuleListItem[]>([]);
   // 详情抽屉
-  const [detailTaskId, setDetailTaskId] = useState<number | null>(null);
+  const [detailTaskUid, setDetailTaskUid] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
   // Job 抽屉
-  const [jobTaskId, setJobTaskId] = useState<number | null>(null);
+  const [jobTaskUid, setJobTaskUid] = useState<string | null>(null);
   const [jobTaskName, setJobTaskName] = useState<string>("");
   const [jobOpen, setJobOpen] = useState(false);
 
   const { mutateAsync: toggleRun, isPending: loading } = useMutation({
-    mutationFn: (vars: { id: number; status: number }) =>
-      taskToggleStatus(vars.id, vars.status),
+    mutationFn: (vars: { uid: string; status: number }) =>
+      taskToggleStatus(vars.uid, vars.status),
     onSuccess: () => {
       messageApi.success("操作成功");
       actionRef.current?.reload();
@@ -51,15 +51,15 @@ const TaskManager: React.FC = () => {
   });
 
   const { mutateAsync: triggerRun, isPending: triggerLoading } = useMutation({
-    mutationFn: (id: number) => taskTrigger(id),
+    mutationFn: (uid: string) => taskTrigger(uid),
     onSuccess: (res) => {
-      messageApi.success(`任务已触发，Job 编号：${res.data.jobNo}`);
+      messageApi.success(`任务已触发，Job 编号：${res.data.jobCode}`);
       actionRef.current?.reload();
     },
   });
 
   const { mutateAsync: deleteRun } = useMutation({
-    mutationFn: (id: number) => taskDelete(id),
+    mutationFn: (uid: string) => taskDelete(uid),
     onSuccess: () => {
       messageApi.success("删除成功");
       actionRef.current?.reload();
@@ -92,24 +92,24 @@ const TaskManager: React.FC = () => {
   const columns: ProColumns<TaskItem>[] = [
     {
       title: "任务名称",
-      dataIndex: "taskName",
+      dataIndex: "name",
       width: 200,
       copyable: true,
       render: (_, record) => (
         <Button
           type="link"
           onClick={() => {
-            setDetailTaskId(record.id);
+            setDetailTaskUid(record.uid);
             setDetailOpen(true);
           }}
         >
-          {record.taskName}
+          {record.name}
         </Button>
       ),
     },
     {
       title: "编码",
-      dataIndex: "taskCode",
+      dataIndex: "code",
       width: 160,
       copyable: true,
       search: false,
@@ -188,7 +188,7 @@ const TaskManager: React.FC = () => {
             <a
               key="pause"
               onClick={async () => {
-                await toggleRun({ id: record.id, status: 2 });
+                await toggleRun({ uid: record.uid, status: 2 });
               }}
             >
               暂停
@@ -197,7 +197,7 @@ const TaskManager: React.FC = () => {
             <a
               key="enable"
               onClick={async () => {
-                await toggleRun({ id: record.id, status: 1 });
+                await toggleRun({ uid: record.uid, status: 1 });
               }}
             >
               启用
@@ -209,15 +209,15 @@ const TaskManager: React.FC = () => {
             key: "trigger",
             label: "手动触发",
             onClick: async () => {
-              await triggerRun(record.id);
+              await triggerRun(record.uid);
             },
           },
           {
             key: "jobs",
             label: "执行记录",
             onClick: () => {
-              setJobTaskId(record.id);
-              setJobTaskName(record.taskName);
+              setJobTaskUid(record.uid);
+              setJobTaskName(record.name);
               setJobOpen(true);
             },
           },
@@ -231,12 +231,12 @@ const TaskManager: React.FC = () => {
             onClick: () => {
               Modal.confirm({
                 title: "确认删除",
-                content: `确定要删除任务「${record.taskName}」吗？此操作不可恢复。`,
+                content: `确定要删除任务「${record.name}」吗？此操作不可恢复。`,
                 okText: "删除",
                 okType: "danger",
                 cancelText: "取消",
                 onOk: async () => {
-                  await deleteRun(record.id);
+                  await deleteRun(record.uid);
                 },
               });
             },
@@ -246,7 +246,7 @@ const TaskManager: React.FC = () => {
         return (
           <Space>
             <UpdateForm
-              key={`edit-${record.id}`}
+              key={`edit-${record.uid}`}
               values={record}
               onOk={() => actionRef.current?.reload()}
             />
@@ -268,7 +268,7 @@ const TaskManager: React.FC = () => {
       <ProTable<TaskItem>
         headerTitle="采集任务管理"
         actionRef={actionRef}
-        rowKey="id"
+        rowKey="uid"
         search={{ labelWidth: 100 }}
         scroll={{ x: 1400 }}
         request={taskList}
@@ -333,22 +333,22 @@ const TaskManager: React.FC = () => {
 
       {/* 任务详情 */}
       <TaskDetail
-        taskId={detailTaskId}
+        taskUid={detailTaskUid}
         open={detailOpen}
         onClose={() => {
           setDetailOpen(false);
-          setDetailTaskId(null);
+          setDetailTaskUid(null);
         }}
       />
 
       {/* Job 执行记录 */}
       <JobDrawer
-        taskId={jobTaskId}
+        taskUid={jobTaskUid}
         taskName={jobTaskName}
         open={jobOpen}
         onClose={() => {
           setJobOpen(false);
-          setJobTaskId(null);
+          setJobTaskUid(null);
         }}
       />
     </PageContainer>

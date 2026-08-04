@@ -15,7 +15,7 @@ import { jobStats, taskDetail } from "../service";
 import type { TaskItem } from "../data";
 
 interface TaskDetailProps {
-  taskId: number | null;
+  taskUid: string | null;  // 对外 uid（详情 + job 统计）
   open: boolean;
   onClose: () => void;
 }
@@ -40,17 +40,17 @@ const jobStatusColor: Record<string, string> = {
   cancelled: "default",
 };
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, open, onClose }) => {
+const TaskDetail: React.FC<TaskDetailProps> = ({ taskUid, open, onClose }) => {
   const { data: detailRes, isLoading } = useQuery({
-    queryKey: ["task-detail", taskId],
-    queryFn: () => taskDetail(taskId!),
-    enabled: !!taskId && open,
+    queryKey: ["task-detail", taskUid],
+    queryFn: () => taskDetail(taskUid!),
+    enabled: !!taskUid && open,
   });
 
   const { data: statsRes } = useQuery({
-    queryKey: ["job-stats", taskId],
-    queryFn: () => jobStats(taskId || undefined),
-    enabled: !!taskId && open,
+    queryKey: ["job-stats", taskUid],
+    queryFn: () => jobStats(taskUid || undefined),
+    enabled: !!taskUid && open,
   });
 
   const task = detailRes?.data as TaskItem | undefined;
@@ -72,10 +72,10 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskId, open, onClose }) => {
           <Card title="基本信息" size="small" style={{ marginBottom: 16 }}>
             <Descriptions column={2} size="small">
               <Descriptions.Item label="任务名称">
-                {task.taskName}
+                {task.name}
               </Descriptions.Item>
               <Descriptions.Item label="任务编码">
-                <Tag>{task.taskCode}</Tag>
+                <Tag>{task.code}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="爬虫标识">
                 {task.spiderCode}

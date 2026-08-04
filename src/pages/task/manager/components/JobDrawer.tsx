@@ -16,7 +16,7 @@ import { jobCancel, jobItems, jobList, jobLogs, jobRetry } from "../service";
 import type { JobItem, JobLogItem, JobDataItem } from "../data";
 
 interface JobDrawerProps {
-  taskId: number | null;
+  taskUid: string | null;
   taskName?: string;
   open: boolean;
   onClose: () => void;
@@ -31,24 +31,24 @@ const jobStatusMap: Record<string, { text: string; color: string }> = {
 };
 
 /** Job 详情子组件：日志 + 采集数据 */
-const JobDetailContent: React.FC<{ jobId: number }> = ({ jobId }) => {
+const JobDetailContent: React.FC<{ jobUid: string }> = ({ jobUid }) => {
   const [logPage, setLogPage] = useState(1);
   const [logLevel, setLogLevel] = useState<string | undefined>();
   const [itemPage, setItemPage] = useState(1);
   const [itemKeyword, setItemKeyword] = useState<string>("");
 
   const { data: logsRes, isLoading: logsLoading } = useQuery({
-    queryKey: ["job-logs", jobId, logPage, logLevel],
+    queryKey: ["job-logs", jobUid, logPage, logLevel],
     queryFn: () =>
-      jobLogs(jobId, { page: logPage, pageSize: 50, level: logLevel }),
-    enabled: !!jobId,
+      jobLogs(jobUid, { page: logPage, pageSize: 50, level: logLevel }),
+    enabled: !!jobUid,
   });
 
   const { data: itemsRes, isLoading: itemsLoading } = useQuery({
-    queryKey: ["job-items", jobId, itemPage, itemKeyword],
+    queryKey: ["job-items", jobUid, itemPage, itemKeyword],
     queryFn: () =>
-      jobItems(jobId, { page: itemPage, pageSize: 20, keyword: itemKeyword }),
-    enabled: !!jobId,
+      jobItems(jobUid, { page: itemPage, pageSize: 20, keyword: itemKeyword }),
+    enabled: !!jobUid,
   });
 
   const logColumns = [
@@ -127,7 +127,7 @@ const JobDetailContent: React.FC<{ jobId: number }> = ({ jobId }) => {
               </div>
               <Table<JobLogItem>
                 size="small"
-                rowKey="id"
+                rowKey="uid"
                 loading={logsLoading}
                 columns={logColumns}
                 dataSource={logsRes?.data.list || []}
@@ -152,7 +152,7 @@ const JobDetailContent: React.FC<{ jobId: number }> = ({ jobId }) => {
             <>
               <Table<JobDataItem>
                 size="small"
-                rowKey="id"
+                rowKey="uid"
                 loading={itemsLoading}
                 columns={itemColumns}
                 dataSource={itemsRes?.data.list || []}
@@ -175,7 +175,7 @@ const JobDetailContent: React.FC<{ jobId: number }> = ({ jobId }) => {
 };
 
 const JobDrawer: React.FC<JobDrawerProps> = ({
-  taskId,
+  taskUid,
   taskName,
   open,
   onClose,
@@ -185,9 +185,9 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
   const [detailOpen, setDetailOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const handleCancel = async (jobId: number) => {
+  const handleCancel = async (jobUid: string) => {
     try {
-      await jobCancel(jobId);
+      await jobCancel(jobUid);
       messageApi.success("Job 已取消");
       actionRef.current?.reload();
     } catch (e: any) {
@@ -195,9 +195,9 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
     }
   };
 
-  const handleRetry = async (jobId: number) => {
+  const handleRetry = async (jobUid: string) => {
     try {
-      await jobRetry(jobId);
+      await jobRetry(jobUid);
       messageApi.success("重试已触发");
       actionRef.current?.reload();
     } catch (e: any) {
@@ -208,7 +208,7 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
   const columns: ProColumns<JobItem>[] = [
     {
       title: "Job 编号",
-      dataIndex: "jobNo",
+      dataIndex: "code",
       width: 220,
       copyable: true,
     },
@@ -281,7 +281,7 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
             type="link"
             size="small"
             danger
-            onClick={() => handleCancel(record.id)}
+            onClick={() => handleCancel(record.uid)}
           >
             取消
           </Button>
@@ -291,7 +291,7 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
             key="retry"
             type="link"
             size="small"
-            onClick={() => handleRetry(record.id)}
+            onClick={() => handleRetry(record.uid)}
           >
             重试
           </Button>
@@ -312,11 +312,11 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
       >
         <ProTable<JobItem>
           actionRef={actionRef}
-          rowKey="id"
+          rowKey="uid"
           search={false}
           options={false}
           request={(params) =>
-            jobList({ ...params, taskId: taskId || undefined })
+            jobList({ ...params, taskUid: taskUid || undefined })
           }
           columns={columns}
           pagination={{
@@ -327,7 +327,7 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
       </Drawer>
 
       <Drawer
-        title={`Job 详情 - ${detailJob?.jobNo || ""}`}
+        title={`Job 详情 - ${detailJob?.code || ""}`}
         size={900}
         open={detailOpen}
         onClose={() => {
@@ -370,7 +370,7 @@ const JobDrawer: React.FC<JobDrawerProps> = ({
                 </Descriptions.Item>
               )}
             </Descriptions>
-            <JobDetailContent jobId={detailJob.id} />
+            <JobDetailContent jobUid={detailJob.uid} />
           </>
         )}
       </Drawer>

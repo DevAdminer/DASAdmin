@@ -46,12 +46,12 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
   const onFinish = async (values: any) => {
     // 解析 JSON 配置字段
     const params: TaskCreateParams = {
-      taskName: values.taskName,
-      taskCode: values.taskCode,
+      name: values.name,
+      code: values.code,
       description: values.description,
       spiderCode: values.spiderCode,
-      spiderConfig: tryParseJSON(values.spiderConfigText),
-      pipelineConfig: tryParseJSON(values.pipelineConfigText),
+      spiderConfig: tryParseJSON(values.spiderConfig),
+      pipelineConfig: tryParseJSON(values.pipelineConfig),
       status: values.status ?? 0,
       runType: values.runType ?? 2,
       cronExpr: values.cronExpr,
@@ -113,14 +113,14 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
           initialValues={{ status: 0, runType: 2 }}
         >
           <ProFormText
-            name="taskName"
+            name="name"
             label="任务名称"
             width="lg"
             placeholder="请输入任务名称"
             rules={[{ required: true, message: "请输入任务名称" }]}
           />
           <ProFormText
-            name="taskCode"
+            name="code"
             label="任务编码"
             width="lg"
             placeholder="唯一标识，如：news_spider_daily"
@@ -164,14 +164,14 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
             }}
           />
           <ProFormTextArea
-            name="spiderConfigText"
+            name="spiderConfig"
             label="爬虫配置参数（JSON）"
             width="lg"
             placeholder='{"keyword": "AI", "limit": 10}'
             fieldProps={{ autoSize: { minRows: 3, maxRows: 6 } }}
           />
           <ProFormTextArea
-            name="pipelineConfigText"
+            name="pipelineConfig"
             label="数据处理流水线配置（JSON）"
             width="lg"
             placeholder='{"pipeline": ["clean", "deduplicate"]}'

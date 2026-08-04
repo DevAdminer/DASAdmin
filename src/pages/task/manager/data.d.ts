@@ -11,9 +11,10 @@ type RunType = 0 | 1 | 2;
 
 /** 任务列表项 / 详情 */
 export interface TaskItem {
-  id: number;
-  taskName: string;
-  taskCode: string;
+  id: number;          // 内部 id（不对外暴露，保留兼容）
+  uid: string;         // 对外业务标识
+  name: string;
+  code: string;
   description?: string;
   spiderCode: string;
   spiderConfig?: Record<string, any> | null;
@@ -38,7 +39,7 @@ export interface TaskItem {
 export interface TaskListParams {
   page?: number;
   pageSize?: number;
-  taskName?: string;
+  name?: string;
   spiderCode?: string;
   status?: TaskStatus;
   runType?: RunType;
@@ -51,8 +52,8 @@ export interface TaskListParams {
 
 /** 创建任务参数 */
 export interface TaskCreateParams {
-  taskName: string;
-  taskCode: string;
+  name: string;
+  code: string;
   description?: string;
   spiderCode: string;
   spiderConfig?: Record<string, any>;
@@ -66,8 +67,8 @@ export interface TaskCreateParams {
 
 /** 更新任务参数 */
 export interface TaskUpdateParams {
-  id: number;
-  taskName?: string;
+  uid: string;
+  name?: string;
   description?: string;
   spiderCode?: string;
   spiderConfig?: Record<string, any>;
@@ -79,16 +80,15 @@ export interface TaskUpdateParams {
 }
 
 /** Job 状态 */
-type JobStatus = 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
+type JobStatus = "pending" | "running" | "success" | "failed" | "cancelled";
 
 /** Job 列表项 / 详情 */
 export interface JobItem {
-  id: number;
-  jobNo: string;
-  taskId: number;
+  uid: string;         // 对外业务标识
+  code: string;        // Job 编码（原 jobNo）
+  taskUid?: string;    // 关联任务 uid
   triggerType: string;
   status: JobStatus;
-  triggerBy?: string;
   startedAt?: string;
   finishedAt?: string;
   durationMs?: number;
@@ -96,7 +96,7 @@ export interface JobItem {
   errorMsg?: string;
   createdAt?: string;
   // 关联查询字段
-  taskName?: string;
+  name?: string;
   spiderCode?: string;
 }
 
@@ -104,19 +104,16 @@ export interface JobItem {
 export interface JobListParams {
   page?: number;
   pageSize?: number;
-  taskId?: number;
+  taskUid?: string;
   status?: JobStatus;
   triggerType?: string;
-  triggerBy?: string;
   startTime?: string;
   endTime?: string;
 }
 
 /** Job 日志项 */
 export interface JobLogItem {
-  id: number;
-  jobId: number;
-  taskId: number;
+  uid: string;
   level: string;
   message: string;
   context?: Record<string, any> | null;
@@ -125,18 +122,15 @@ export interface JobLogItem {
 
 /** Job 采集数据项 */
 export interface JobDataItem {
-  id: number;
-  jobId: number;
-  taskId: number;
+  uid: string;
   title?: string;
-  content?: string;
   url?: string;
   author?: string;
   source?: string;
+  sourceId?: string;
   publishTime?: string;
   tags?: string[];
   images?: string[] | null;
-  extra?: Record<string, any> | null;
   createdAt: string;
 }
 
@@ -177,7 +171,7 @@ export interface PageResult<T> {
 /** 后端统一响应 */
 export interface ApiResponse<T = any> {
   msg: string;
-  status: 'ok' | 'error';
+  status: "ok" | "error";
   data: T;
 }
 

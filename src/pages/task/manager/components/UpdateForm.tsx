@@ -53,12 +53,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
 
   const onFinish = async (formValues: any) => {
     const params: TaskUpdateParams = {
-      id: values.id,
-      taskName: formValues.taskName,
+      uid: values.uid,
+      name: formValues.name,
       description: formValues.description,
       spiderCode: formValues.spiderCode,
-      spiderConfig: tryParseJSON(formValues.spiderConfigText),
-      pipelineConfig: tryParseJSON(formValues.pipelineConfigText),
+      spiderConfig: tryParseJSON(formValues.spiderConfig),
+      pipelineConfig: tryParseJSON(formValues.pipelineConfig),
       runType: formValues.runType,
       cronExpr: formValues.cronExpr,
       intervalSeconds: formValues.intervalSeconds,
@@ -101,11 +101,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
           onFinish={onFinish}
           modalProps={{ okButtonProps: { loading }, destroyOnHidden: true }}
           initialValues={{
-            taskName: values.taskName,
+            name: values.name,
             description: values.description,
             spiderCode: values.spiderCode,
-            spiderConfigText: jsonToText(values.spiderConfig),
-            pipelineConfigText: jsonToText(values.pipelineConfig),
+            spiderConfig: jsonToText(values.spiderConfig),
+            pipelineConfig: jsonToText(values.pipelineConfig),
             runType: values.runType,
             cronExpr: values.cronExpr,
             intervalSeconds: values.intervalSeconds,
@@ -113,7 +113,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
           }}
         >
           <ProFormText
-            name="taskName"
+            name="name"
             label="任务名称"
             width="lg"
             rules={[{ required: true, message: "请输入任务名称" }]}
@@ -139,13 +139,13 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
             }}
           />
           <ProFormTextArea
-            name="spiderConfigText"
+            name="spiderConfig"
             label="爬虫配置参数（JSON）"
             width="lg"
             fieldProps={{ autoSize: { minRows: 3, maxRows: 6 } }}
           />
           <ProFormTextArea
-            name="pipelineConfigText"
+            name="pipelineConfig"
             label="数据处理流水线配置（JSON）"
             width="lg"
             fieldProps={{ autoSize: { minRows: 3, maxRows: 6 } }}
