@@ -52,8 +52,8 @@ const TaskManager: React.FC = () => {
 
   const { mutateAsync: triggerRun, isPending: triggerLoading } = useMutation({
     mutationFn: (uid: string) => taskTrigger(uid),
-    onSuccess: (res) => {
-      messageApi.success(`任务已触发，Job 编号：${res.data.jobCode}`);
+    onSuccess: () => {
+      messageApi.success("任务已触发，可查看执行记录");
       actionRef.current?.reload();
     },
   });
@@ -119,6 +119,14 @@ const TaskManager: React.FC = () => {
       dataIndex: "spiderCode",
       width: 120,
       copyable: true,
+    },
+    {
+      title: "流水线",
+      dataIndex: "pipelineCode",
+      width: 110,
+      search: false,
+      render: (_, r) =>
+        r.pipelineCode ? <Tag color="purple">{r.pipelineCode}</Tag> : "-",
     },
     {
       title: "状态",

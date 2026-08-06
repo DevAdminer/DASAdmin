@@ -14,6 +14,12 @@ import type {
   ProTableResult,
 } from "./data";
 
+/** 创建/操作类统一响应（后端 ok_msg 格式） */
+export interface ActionResponse {
+  msg: string;
+  status: string;
+}
+
 /**
  * 任务列表（ProTable request 适配）
  * ProTable 传入 { current, pageSize, ...searchParams }
@@ -57,7 +63,7 @@ export async function taskDetail(uid: string) {
 
 /** 创建任务 */
 export async function taskCreate(data: TaskCreateParams) {
-  return request<{ data: { uid: string } }>("/api/task/create", {
+  return request<ActionResponse>("/api/task/create", {
     method: "POST",
     data,
   });
@@ -65,7 +71,7 @@ export async function taskCreate(data: TaskCreateParams) {
 
 /** 更新任务 */
 export async function taskUpdate(data: TaskUpdateParams) {
-  return request<{ data: { uid: string } }>("/api/task/update", {
+  return request<ActionResponse>("/api/task/update", {
     method: "POST",
     data,
   });
@@ -73,7 +79,7 @@ export async function taskUpdate(data: TaskUpdateParams) {
 
 /** 删除任务 */
 export async function taskDelete(uid: string) {
-  return request<{ data: { uid: string } }>("/api/task/delete", {
+  return request<ActionResponse>("/api/task/delete", {
     method: "POST",
     data: { uid },
   });
@@ -81,7 +87,7 @@ export async function taskDelete(uid: string) {
 
 /** 启用/暂停任务 */
 export async function taskToggleStatus(uid: string, status: number) {
-  return request<{ data: any }>("/api/task/toggle", {
+  return request<ActionResponse>("/api/task/toggleStatus", {
     method: "POST",
     data: { uid, status },
   });
@@ -89,13 +95,10 @@ export async function taskToggleStatus(uid: string, status: number) {
 
 /** 手动触发任务 */
 export async function taskTrigger(uid: string, triggerType = "manual") {
-  return request<{ data: { jobId: number; jobCode: string } }>(
-    "/api/task/trigger",
-    {
-      method: "POST",
-      data: { uid, triggerType },
-    }
-  );
+  return request<ActionResponse>("/api/task/trigger", {
+    method: "POST",
+    data: { uid, triggerType },
+  });
 }
 
 /** 获取下拉选项 */
@@ -142,7 +145,7 @@ export async function jobDetail(uid: string) {
 
 /** 取消 Job */
 export async function jobCancel(uid: string) {
-  return request<{ data: any }>("/api/job/cancel", {
+  return request<ActionResponse>("/api/job/cancel", {
     method: "POST",
     data: { uid },
   });
@@ -150,7 +153,7 @@ export async function jobCancel(uid: string) {
 
 /** 重试 Job */
 export async function jobRetry(uid: string) {
-  return request<{ data: any }>("/api/job/retry", {
+  return request<ActionResponse>("/api/job/retry", {
     method: "POST",
     data: { uid },
   });

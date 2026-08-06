@@ -14,27 +14,25 @@ import {
   Tabs,
   Typography,
 } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import type { ProColumns } from "@ant-design/pro-components";
 import React from "react";
 import { spiderDetail, spiderTasks } from "../service";
-import type {
-  SpiderDetail as SpiderDetailType,
-  SpiderRecentJob,
-} from "../data.d";
-import type { TaskItem } from "../../task/manager/data";
+import type { SpiderDetail as SpiderDetailType } from "../data.d";
+import type { SpiderTaskItem } from "../data.d";
 
 const { Text } = Typography;
 
-const jobStatusColor: Record<string, string> = {
-  success: "green",
-  failed: "red",
-  running: "blue",
-  pending: "orange",
-  cancelled: "default",
+const jobStatusMap: Record<string, { text: string; color: string }> = {
+  pending: { text: "待执行", color: "orange" },
+  running: { text: "运行中", color: "blue" },
+  success: { text: "成功", color: "green" },
+  failed: { text: "失败", color: "red" },
+  cancelled: { text: "已取消", color: "default" },
 };
 
 interface SpiderDetailProps {
-  spiderCode: string | null;
+  spiderCode: string | null; // 详情接口用 uid 定位
   open: boolean;
   onClose: () => void;
 }
@@ -44,12 +42,6 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
   open,
   onClose,
 }) => {
-  console.log(
-    "SpiderDetail component rendered with spiderCode:",
-    spiderCode,
-    "and open:",
-    open
-  );
   const { data: detailRes, isLoading } = useQuery({
     queryKey: ["spider-detail", spiderCode],
     queryFn: () => spiderDetail(spiderCode!),
@@ -58,11 +50,11 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
 
   const detail = detailRes?.data as SpiderDetailType | undefined;
 
-  const recentJobColumns = [
+  const recentJobColumns: ColumnsType<any> = [
     {
-      title: "Job 编号",
-      dataIndex: "jobNo",
-      key: "jobNo",
+      title: "Job 编码",
+      dataIndex: "code",
+      key: "code",
       width: 200,
       render: (v: string) => <Text code>{v}</Text>,
     },
@@ -71,9 +63,10 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
       dataIndex: "status",
       key: "status",
       width: 90,
-      render: (v: string) => (
-        <Tag color={jobStatusColor[v] || "default"}>{v}</Tag>
-      ),
+      render: (v: string) => {
+        const s = jobStatusMap[v] || { text: v, color: "default" };
+        return <Tag color={s.color}>{s.text}</Tag>;
+      },
     },
     {
       title: "任务名称",
@@ -102,17 +95,17 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
     },
   ];
 
-  const taskColumns: ProColumns<TaskItem>[] = [
+  const taskColumns: ProColumns<SpiderTaskItem>[] = [
     {
       title: "任务名称",
-      dataIndex: "taskName",
-      key: "taskName",
+      dataIndex: "name",
+      key: "name",
       copyable: true,
     },
     {
       title: "任务编码",
-      dataIndex: "taskCode",
-      key: "taskCode",
+      dataIndex: "code",
+      key: "code",
       search: false,
       width: 150,
     },
@@ -121,13 +114,7 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
       dataIndex: "status",
       key: "status",
       search: false,
-      width: 80,
-      valueType: "select",
-      valueEnum: {
-        0: { text: "草稿" },
-        1: { text: "启用" },
-        2: { text: "暂停" },
-      },
+      width: 90,
       render: (_, r) => {
         const map: Record<number, { text: string; status: string }> = {
           0: { text: "草稿", status: "default" },
@@ -147,7 +134,7 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
       dataIndex: "jobCount",
       key: "jobCount",
       search: false,
-      width: 80,
+      width: 90,
     },
     {
       title: "创建时间",
@@ -183,22 +170,27 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
                   >
                     <Descriptions column={2} size="small">
                       <Descriptions.Item label="名称">
-                        {detail.displayName}
+                        {detail.displayName || detail.name}
                       </Descriptions.Item>
                       <Descriptions.Item label="编码">
                         <Text code>{detail.code}</Text>
                       </Descriptions.Item>
-                      <Descriptions.Item label="版本">
-                        <Tag color="blue">{detail.version}</Tag>
-                      </Descriptions.Item>
                       <Descriptions.Item label="来源类型">
                         <Tag>{detail.sourceType}</Tag>
                       </Descriptions.Item>
-                      <Descriptions.Item label="类名">
-                        <Text code>{detail.className}</Text>
+                      <Descriptions.Item label="关联模板">
+                        {detail.templateCode ? (
+                          <Tag color="purple">{detail.templateCode}</Tag>
+                        ) : (
+                          "-"
+                        )}
                       </Descriptions.Item>
-                      <Descriptions.Item label="作者">
-                        {detail.author || "-"}
+                      <Descriptions.Item label="类型" span={2}>
+                        {detail.isPlugin === 1 ? (
+                          <Tag color="geekblue">插件注册</Tag>
+                        ) : (
+                          <Tag>DB 创建</Tag>
+                        )}
                       </Descriptions.Item>
                       <Descriptions.Item label="描述" span={2}>
                         {detail.description || "-"}
@@ -215,65 +207,48 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
                     </Descriptions>
                   </Card>
 
-                  {/* 配置字段 */}
+                  {/* 字段映射 */}
                   <Card
-                    title="配置字段"
+                    title="字段映射"
                     size="small"
                     style={{ marginBottom: 16 }}
                   >
-                    {detail.configFields?.length ? (
+                    {detail.fieldMapping?.length ? (
                       <Table
                         size="small"
                         pagination={false}
-                        rowKey="field"
-                        dataSource={detail.configFields}
+                        rowKey={(r, i) => `${r.source_field}-${i}`}
+                        dataSource={detail.fieldMapping as any[]}
                         columns={[
                           {
-                            title: "字段",
-                            dataIndex: "field",
-                            key: "field",
-                            width: 120,
+                            title: "源字段",
+                            dataIndex: "sourceField",
+                            key: "sourceField",
                             render: (v: string) => <Text code>{v}</Text>,
                           },
                           {
-                            title: "标签",
-                            dataIndex: "label",
-                            key: "label",
-                            width: 120,
+                            title: "目标字段",
+                            dataIndex: "targetField",
+                            key: "targetField",
+                            render: (v: string) => <Text code>{v}</Text>,
                           },
                           {
                             title: "类型",
                             dataIndex: "type",
                             key: "type",
-                            width: 80,
-                            render: (v: string) => <Tag>{v}</Tag>,
+                            width: 90,
+                            render: (v: string) => <Tag>{v || "-"}</Tag>,
                           },
                           {
-                            title: "必填",
-                            dataIndex: "required",
-                            key: "required",
-                            width: 60,
-                            render: (v: boolean) =>
-                              v ? <Tag color="red">是</Tag> : <Tag>否</Tag>,
-                          },
-                          {
-                            title: "默认值",
-                            dataIndex: "default",
-                            key: "default",
-                            width: 100,
-                            render: (v: any) =>
-                              v != null ? <Text code>{String(v)}</Text> : "-",
-                          },
-                          {
-                            title: "说明",
-                            dataIndex: "placeholder",
-                            key: "placeholder",
+                            title: "提取规则",
+                            dataIndex: "rule",
+                            key: "rule",
                             render: (v: string) => v || "-",
                           },
                         ]}
                       />
                     ) : (
-                      <Empty description="此爬虫无需配置参数" />
+                      <Empty description="暂无字段映射" />
                     )}
                   </Card>
                 </>
@@ -363,7 +338,7 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
                 <Card size="small">
                   <Table
                     size="small"
-                    rowKey="id"
+                    rowKey="uid"
                     pagination={{ pageSize: 10, showSizeChanger: true }}
                     dataSource={detail.recentJobs || []}
                     columns={recentJobColumns}
@@ -375,23 +350,21 @@ const SpiderDetail: React.FC<SpiderDetailProps> = ({
               key: "tasks",
               label: "关联任务",
               children: (
-                <ProTable<TaskItem>
-                  rowKey="id"
+                <ProTable<SpiderTaskItem>
+                  rowKey="uid"
                   size="small"
                   search={false}
                   options={false}
-                  request={async (params) => {
-                    return spiderTasks({
-                      code: spiderCode!,
-                      current: params.current,
-                      pageSize: params.pageSize,
-                    });
-                  }}
+                  request={
+                    (async (params: any) =>
+                      spiderTasks({
+                        code: detail.code,
+                        current: params.current,
+                        pageSize: params.pageSize,
+                      })) as any
+                  }
                   columns={taskColumns}
-                  pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                  }}
+                  pagination={{ pageSize: 10, showSizeChanger: true }}
                 />
               ),
             },

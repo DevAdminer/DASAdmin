@@ -7,11 +7,15 @@ import type {
   PageResult,
   SpiderTasksParams,
   SpiderCreateParams,
+  SpiderTaskItem,
   ProTableResult,
 } from "./data.d";
 
-// 复用 manager 模块的 TaskItem 类型（避免循环依赖，直接 import）
-import type { TaskItem } from "../task/manager/data";
+/** 创建/操作类统一响应（后端 ok_msg 格式） */
+export interface ActionResponse {
+  msg: string;
+  status: string;
+}
 
 /**
  * 爬虫列表（含使用统计）
@@ -38,17 +42,16 @@ export async function spiderList(params: {
 }
 
 /** 爬虫详情（含完整统计+最近执行） */
-export async function spiderDetail(code: string) {
-  console.log("Fetching spider detail for code:", code);
+export async function spiderDetail(uid: string) {
   return request<{ data: SpiderDetail }>("/api/spider/detail", {
     method: "GET",
-    params: { code },
+    params: { uid },
   });
 }
 
 /** 创建爬虫 */
 export async function spiderCreate(data: SpiderCreateParams) {
-  return request<{ data: { id: number } }>("/api/spider/create", {
+  return request<ActionResponse>("/api/spider/create", {
     method: "POST",
     data,
   });
@@ -79,8 +82,8 @@ export async function spiderTasks(
     current?: number;
     pageSize?: number;
   }
-) {
-  const res = await request<{ data: PageResult<TaskItem> }>(
+): Promise<ProTableResult<SpiderTaskItem>> {
+  const res = await request<{ data: PageResult<SpiderTaskItem> }>(
     "/api/spider/tasks",
     {
       method: "POST",
@@ -99,16 +102,40 @@ export async function spiderTasks(
 }
 
 /** 启用/禁用爬虫 */
-export async function spiderToggleStatus(code: string, status: number) {
-  return request(`/api/spider/${code}/toggle-status`, { method: "POST", data: { status } });
+export async function spiderToggleStatus(uid: string, status: number) {
+  return request<ActionResponse>("/api/spider/toggleStatus", {
+    method: "POST",
+    data: { uid, status },
+  });
 }
 
 /** 删除爬虫 */
-export async function spiderDelete(id: number) {
-  return request(`/api/spider/${id}`, { method: "DELETE" });
+export async function spiderDelete(uid: string) {
+  return request<ActionResponse>("/api/spider/delete", {
+    method: "POST",
+    data: { uid },
+  });
 }
 
+/** 爬虫管理顶部统计 */
+export interface SpiderStats {
+  total: number;
+  enabled: number;
+  disabled: number;
+  today: number;
+}
+export async function spiderStats(): Promise<{ data: SpiderStats }> {
+  return request("/api/spider/stats", { method: "GET" });
+}
+
+
 /** 爬虫模板列表 */
-export async function spiderTemplateList(params: { current?: number; pageSize?: number }) {
-  return request<{ data: PageResult<any> }>("/api/spider-template/list", { method: "POST", data: { page: params.current || 1, pageSize: params.pageSize || 100 } });
+export async function spiderTemplateList(params: {
+  current?: number;
+  pageSize?: number;
+}) {
+  return request<{ data: PageResult<any> }>("/api/spider/templates", {
+    method: "POST",
+    data: { page: params.current || 1, pageSize: params.pageSize || 100, scope: "all" },
+  });
 }

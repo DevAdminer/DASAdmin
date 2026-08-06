@@ -1,9 +1,9 @@
 /**
  * 爬虫管理模块类型定义
- * 字段与后端返回的驼峰命名保持一致
+ * 字段与后端返回的驼峰命名保持一致（V3 DB 对齐）
  */
 
-/** 配置字段定义（动态表单渲染依据） */
+/** 配置字段定义（测试爬取动态表单渲染依据，来自插件注册元信息） */
 export interface ConfigField {
   field: string;
   label: string;
@@ -14,29 +14,25 @@ export interface ConfigField {
   options?: string[];
 }
 
-/** 爬虫列表项 */
+/** 爬虫列表项（后端 /api/spider/list 返回） */
 export interface SpiderItem {
-  id: number;
-  name: string;
+  uid: string;
   code: string;
-  displayName: string;
-  description: string;
-  version: string;
-  author: string;
-  tags: string;
-  sourceType: string;
-  className: string;
-  configFields: ConfigField[];
-  status: number;       // 1=启用 0=禁用
-  isPlugin: number;     // 0=DB创建 1=插件注册
-  // 统计字段（列表接口附加）
+  name: string;
+  displayName?: string;
+  description?: string;
+  sourceType: string;      // html/rss/json_api/playwright
+  templateCode?: string;   // 关联模板编码
+  isPlugin: number;        // 0=DB创建 1=插件注册
+  tags: string[];
+  status: number;          // 1启用 0禁用
+  // 统计字段
   taskCount: number;
   jobCount: number;
   successCount: number;
-  failedCount: number;
   totalItems: number;
-  updatedAt: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 /** 爬虫统计信息 */
@@ -55,35 +51,36 @@ export interface SpiderStats {
 
 /** 最近执行的 Job */
 export interface SpiderRecentJob {
-  id: number;
-  jobNo: string;
+  uid: string;
+  code: string;
   status: string;
+  taskName?: string;
   startedAt?: string;
   finishedAt?: string;
   durationMs?: number;
   itemsCount?: number;
-  taskName?: string;
+  createdAt?: string;
 }
 
-/** 爬虫详情 */
+/** 爬虫详情（/api/spider/detail） */
 export interface SpiderDetail extends SpiderItem {
+  config?: Record<string, any> | null;
+  fieldMapping?: Array<Record<string, any>>;
   stats: SpiderStats;
   recentJobs: SpiderRecentJob[];
 }
 
 /** 创建爬虫参数 */
 export interface SpiderCreateParams {
-  taskName: string;
-  taskCode: string;
+  name: string;
+  code: string;
   description?: string;
-  spiderCode: string;
-  spiderConfig?: Record<string, any>;
-  pipelineConfig?: Record<string, any>;
-  status?: TaskStatus;
-  runType?: RunType;
-  cronExpr?: string;
-  intervalSeconds?: number;
-  tags?: string;
+  templateUid?: string;
+  sourceType?: string;
+  config?: Record<string, any>;
+  fieldMapping?: Array<Record<string, any>>;
+  tags?: string[];
+  status?: number;
 }
 
 /** 测试爬取结果项 */
@@ -116,7 +113,21 @@ export interface SpiderTasksParams {
   pageSize?: number;
 }
 
-/** 分页结果（复用 manager 模块的定义格式） */
+/** 关联任务项 */
+export interface SpiderTaskItem {
+  uid: string;
+  code: string;
+  name: string;
+  spiderCode: string;
+  runType: number;
+  status: number;
+  jobCount: number;
+  successCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 分页结果 */
 export interface PageResult<T> {
   total: number;
   page: number;
@@ -131,35 +142,6 @@ export interface ApiResponse<T = any> {
   data: T;
 }
 
-export enum SpiderType {
-  REQUESTS = "requests",
-  PLAYWRIGHT = "playwright",
-  SCRAPY = "scrapy",
-  API = "api",
-  CUSTOM = "custom",
-}
-
-/** 提取规则 */
-export interface ExtractRule {
-  field: string;
-  selector: string;
-  selector_type: "css" | "xpath" | "regex" | "json";
-  attribute?: string;
-  transform?: string[];
-  default_value?: string;
-  required?: boolean;
-  description?: string;
-}
-
-/** 分页规则 */
-export interface PaginationRule {
-  type: "url" | "click" | "scroll" | "button";
-  selector?: string;
-  next_page_selector?: string;
-  max_pages?: number;
-  page_param?: string;
-  page_size?: number;
-}
 /** ProTable request 返回格式 */
 export interface ProTableResult<T> {
   data: T[];

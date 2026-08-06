@@ -11,19 +11,20 @@ type RunType = 0 | 1 | 2;
 
 /** 任务列表项 / 详情 */
 export interface TaskItem {
-  id: number;          // 内部 id（不对外暴露，保留兼容）
-  uid: string;         // 对外业务标识
+  uid: string;         // 唯一主键/业务标识
   name: string;
   code: string;
   description?: string;
   spiderCode: string;
   spiderConfig?: Record<string, any> | null;
+  pipelineUid?: string;
+  pipelineCode?: string;
   pipelineConfig?: Record<string, any> | null;
   status: TaskStatus;
   runType: RunType;
   cronExpr?: string;
   intervalSeconds?: number;
-  tags?: string;
+  tags?: string[];
   creator?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -57,12 +58,13 @@ export interface TaskCreateParams {
   description?: string;
   spiderCode: string;
   spiderConfig?: Record<string, any>;
+  pipelineUid?: string;
   pipelineConfig?: Record<string, any>;
   status?: TaskStatus;
   runType?: RunType;
   cronExpr?: string;
   intervalSeconds?: number;
-  tags?: string;
+  tags?: string[];
 }
 
 /** 更新任务参数 */
@@ -72,11 +74,12 @@ export interface TaskUpdateParams {
   description?: string;
   spiderCode?: string;
   spiderConfig?: Record<string, any>;
+  pipelineUid?: string;
   pipelineConfig?: Record<string, any>;
   runType?: RunType;
   cronExpr?: string;
   intervalSeconds?: number;
-  tags?: string;
+  tags?: string[];
 }
 
 /** Job 状态 */
@@ -150,14 +153,18 @@ export interface JobStats {
 export interface TaskOptions {
   spiders: SpiderOption[];
   usedSpiders: string[];
+  pipelines?: { uid: string; code: string; name: string }[];
   runTypes: { value: number; label: string }[];
   statuses: { value: number; label: string; color: string }[];
 }
 
 export interface SpiderOption {
+  uid: string;
   code: string;
   name: string;
-  class: string;
+  sourceType?: string;
+  description?: string;
+  used?: boolean; // 是否已被任务引用
 }
 
 /** 分页结果 */

@@ -51,6 +51,7 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
       description: values.description,
       spiderCode: values.spiderCode,
       spiderConfig: tryParseJSON(values.spiderConfig),
+      pipelineUid: values.pipelineUid,
       pipelineConfig: tryParseJSON(values.pipelineConfig),
       status: values.status ?? 0,
       runType: values.runType ?? 2,
@@ -160,6 +161,20 @@ const CreateForm: React.FC<CreateFormProps> = ({ reload }) => {
               return res.data.spiders.map((s) => ({
                 label: `${s.name} (${s.code})`,
                 value: s.code,
+              }));
+            }}
+          />
+          <ProFormSelect
+            name="pipelineUid"
+            label="关联流水线（可选）"
+            width="lg"
+            placeholder="选择数据清洗/处理流水线"
+            allowClear
+            request={async () => {
+              const res = await taskOptions();
+              return (res.data.pipelines || []).map((p) => ({
+                label: `${p.name} (${p.code})`,
+                value: p.uid,
               }));
             }}
           />

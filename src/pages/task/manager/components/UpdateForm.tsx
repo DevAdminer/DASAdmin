@@ -58,6 +58,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
       description: formValues.description,
       spiderCode: formValues.spiderCode,
       spiderConfig: tryParseJSON(formValues.spiderConfig),
+      pipelineUid: formValues.pipelineUid,
       pipelineConfig: tryParseJSON(formValues.pipelineConfig),
       runType: formValues.runType,
       cronExpr: formValues.cronExpr,
@@ -105,11 +106,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
             description: values.description,
             spiderCode: values.spiderCode,
             spiderConfig: jsonToText(values.spiderConfig),
+            pipelineUid: values.pipelineUid,
             pipelineConfig: jsonToText(values.pipelineConfig),
             runType: values.runType,
             cronExpr: values.cronExpr,
             intervalSeconds: values.intervalSeconds,
-            tags: values.tags,
+            tags: values.tags?.join(","),
           }}
         >
           <ProFormText
@@ -135,6 +137,20 @@ const UpdateForm: React.FC<UpdateFormProps> = ({ values, onOk }) => {
               return res.data.spiders.map((s) => ({
                 label: `${s.name} (${s.code})`,
                 value: s.code,
+              }));
+            }}
+          />
+          <ProFormSelect
+            name="pipelineUid"
+            label="关联流水线（可选）"
+            width="lg"
+            placeholder="选择数据清洗/处理流水线"
+            allowClear
+            request={async () => {
+              const res = await taskOptions();
+              return (res.data.pipelines || []).map((p) => ({
+                label: `${p.name} (${p.code})`,
+                value: p.uid,
               }));
             }}
           />

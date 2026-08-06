@@ -118,6 +118,7 @@ const SpiderTest: React.FC<SpiderTestProps> = ({
   displayName,
 }) => {
   const [configValues, setConfigValues] = useState<Record<string, any>>({});
+  const [configJson, setConfigJson] = useState("");
   const [limit, setLimit] = useState(5);
 
   // 打开时重置配置
@@ -128,11 +129,24 @@ const SpiderTest: React.FC<SpiderTestProps> = ({
         if (f.default !== undefined) defaults[f.field] = f.default;
       });
       setConfigValues(defaults);
+      setConfigJson("");
     }
   }, [open, spiderCode]);
 
   const mutation = useMutation({
     mutationFn: () => {
+      // 无 configFields 时使用 JSON 文本框配置
+      if (configFields.length === 0) {
+        let config: Record<string, any> = {};
+        if (configJson.trim()) {
+          try {
+            config = JSON.parse(configJson);
+          } catch {
+            throw new Error("配置参数 JSON 格式错误");
+          }
+        }
+        return spiderTest(spiderCode!, config, limit);
+      }
       // 处理 JSON 类型字段
       const processed: Record<string, any> = {};
       configFields.forEach((f) => {
@@ -269,11 +283,29 @@ const SpiderTest: React.FC<SpiderTestProps> = ({
           </div>
         </>
       ) : (
-        <Alert
-          type="info"
-          message="此爬虫无需配置参数"
-          style={{ marginBottom: 16 }}
-        />
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <Text strong>爬虫配置参数（JSON）</Text>
+          </div>
+          <Input.TextArea
+            rows={3}
+            placeholder='{"url": "https://example.com", "maxPages": 1}'
+            value={configJson}
+            onChange={(e) => setConfigJson(e.target.value)}
+            style={{ marginBottom: 12 }}
+          />
+          <div style={{ marginBottom: 16 }}>
+            <Space>
+              <Text>返回数据条数上限：</Text>
+              <InputNumber
+                min={1}
+                max={20}
+                value={limit}
+                onChange={(v) => setLimit(v || 5)}
+              />
+            </Space>
+          </div>
+        </>
       )}
 
       {/* 执行结果 */}

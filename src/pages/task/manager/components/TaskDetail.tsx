@@ -80,6 +80,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskUid, open, onClose }) => {
               <Descriptions.Item label="爬虫标识">
                 {task.spiderCode}
               </Descriptions.Item>
+              <Descriptions.Item label="关联流水线">
+                {task.pipelineCode ? (
+                  <Tag color="purple">{task.pipelineCode}</Tag>
+                ) : (
+                  "-"
+                )}
+              </Descriptions.Item>
               <Descriptions.Item label="状态">
                 <Badge
                   status={statusMap[task.status]?.status as any}
@@ -96,10 +103,10 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ taskUid, open, onClose }) => {
                 {task.description || "-"}
               </Descriptions.Item>
               <Descriptions.Item label="标签" span={2}>
-                {task.tags
-                  ? task.tags.split(",").map((t) => (
-                      <Tag key={t.trim()} color="blue">
-                        {t.trim()}
+                {task.tags?.length
+                  ? task.tags.map((t) => (
+                      <Tag key={t} color="blue">
+                        {t}
                       </Tag>
                     ))
                   : "-"}

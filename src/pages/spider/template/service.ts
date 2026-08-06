@@ -1,18 +1,10 @@
 import { request } from "@umijs/max";
-import type { SpiderType, ExtractRule, PaginationRule } from "../data.d";
 
-/** 模板状态 */
-export enum TemplateStatus {
-  DRAFT = "draft",
-  PUBLISHED = "published",
-  ARCHIVED = "archived",
-}
-
-/** 字段映射 */
+/** 字段映射项（与后端 fieldMapping JSON 一致） */
 export interface FieldMapping {
   source_field: string;
   target_field: string;
-  field_type:
+  field_type?:
     | "string"
     | "text"
     | "number"
@@ -26,71 +18,91 @@ export interface FieldMapping {
   description?: string;
 }
 
-/** 爬虫模板创建参数 */
+/** 配置参数项（configSchema 元素） */
+export interface ConfigSchemaItem {
+  name: string;
+  label: string;
+  type: "string" | "number" | "boolean" | "select" | "json" | "textarea";
+  required?: boolean;
+  default?: any;
+  options?: string[];
+  placeholder?: string;
+  min?: number;
+  max?: number;
+}
+
+/** 模板来源类型 */
+export type SpiderSourceType = "html" | "rss" | "json_api" | "playwright";
+
+/** 爬虫模板响应（后端 to_camel_dict 输出 camelCase） */
+export interface SpiderTemplateItem {
+  uid: string;
+  code: string;
+  name: string;
+  description?: string;
+  category: string;
+  sourceType: SpiderSourceType;
+  icon?: string;
+  tags?: string[];
+  isBuiltin: number;
+  usageCount: number;
+  status: number;
+  version?: string;
+  sortOrder?: number;
+  codeTemplate?: string;
+  configSchema?: ConfigSchemaItem[];
+  fieldMapping?: FieldMapping[];
+  spiderCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+/** 模板对象（兼容别名） */
+export type SpiderTemplateResponse = SpiderTemplateItem;
+
+/** 列表响应 */
+export interface SpiderTemplateListResponse {
+  msg: string;
+  status: string;
+  data: {
+    page: number;
+    pageSize: number;
+    list: SpiderTemplateItem[];
+  };
+}
+
+/** 新建模板参数 */
 export interface SpiderTemplateCreate {
   name: string;
+  code: string;
   description?: string;
-  spider_type: SpiderType;
-  version?: string;
   category?: string;
-  tags?: string[];
-  field_mapping?: FieldMapping[];
-  extract_rules?: ExtractRule[];
-  pagination_rule?: PaginationRule;
-  code_template?: string;
-  config_template?: Record<string, any>;
-  headers_template?: Record<string, string>;
-  allowed_domains?: string[];
+  sourceType: SpiderSourceType;
   icon?: string;
+  codeTemplate?: string;
+  configSchema?: ConfigSchemaItem[];
+  fieldMapping?: FieldMapping[];
+  tags?: string[];
 }
 
-/** 爬虫模板更新参数 */
-export interface SpiderTemplateUpdate extends Partial<SpiderTemplateCreate> {
-  status?: TemplateStatus;
-}
-
-/** 爬虫模板响应 */
-export interface SpiderTemplateResponse {
-  id: string;
+/** 从模板创建爬虫 */
+export interface CreateSpiderFromTemplate {
+  templateUid: string;
   name: string;
-  description?: string;
-  spider_type: SpiderType;
-  status: TemplateStatus;
-  version: string;
-  category?: string;
-  tags?: string[];
-  field_mapping?: FieldMapping[];
-  extract_rules?: ExtractRule[];
-  pagination_rule?: PaginationRule;
-  code_template?: string;
-  config_template?: Record<string, any>;
-  headers_template?: Record<string, string>;
-  allowed_domains?: string[];
-  icon?: string;
-  spider_count: number;
-  created_at: string;
-  updated_at: string;
+  code: string;
+  config?: Record<string, any>;
+  fieldMapping?: FieldMapping[];
 }
 
-/** 爬虫模板列表响应 */
-export interface SpiderTemplateListResponse {
-  items: SpiderTemplateResponse[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-
-/** 爬虫模板 API */
+/** 爬虫模板 API（对齐后端 /api/spider/template/*） */
 export async function listSpiderTemplates(
   data?: {
     page?: number;
     pageSize?: number;
-    search?: string;
-    spiderType?: SpiderType;
-    status?: TemplateStatus;
+    keyword?: string;
     category?: string;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
+    sourceType?: SpiderSourceType;
+    scope?: "all" | "builtin" | "mine";
+    status?: number;
   },
   options?: { [key: string]: any }
 ): Promise<SpiderTemplateListResponse> {
@@ -102,20 +114,27 @@ export async function listSpiderTemplates(
 }
 
 export async function getSpiderTemplate(
-  id: string,
+  uid: string,
   options?: { [key: string]: any }
-): Promise<SpiderTemplateResponse> {
-  return request(`/api/v1/spider-templates/${id}`, {
+): Promise<{ msg: string; status: string; data: SpiderTemplateItem }> {
+  return request("/api/spider/template/detail", {
     method: "GET",
+    params: { uid },
     ...(options || {}),
   });
+}
+
+/** 创建/操作类统一响应（后端 ok_msg 格式） */
+export interface ActionResponse {
+  msg: string;
+  status: string;
 }
 
 export async function createSpiderTemplate(
   data: SpiderTemplateCreate,
   options?: { [key: string]: any }
-): Promise<SpiderTemplateResponse> {
-  return request("/api/v1/spider-templates", {
+): Promise<ActionResponse> {
+  return request("/api/spider/template/create", {
     method: "POST",
     data,
     ...(options || {}),
@@ -123,47 +142,60 @@ export async function createSpiderTemplate(
 }
 
 export async function updateSpiderTemplate(
-  id: string,
-  data: SpiderTemplateUpdate,
+  uid: string,
+  data: Partial<SpiderTemplateCreate> & { status?: number },
   options?: { [key: string]: any }
-): Promise<SpiderTemplateResponse> {
-  return request(`/api/v1/spider-templates/${id}`, {
-    method: "PUT",
-    data,
+): Promise<ActionResponse> {
+  return request("/api/spider/template/update", {
+    method: "POST",
+    data: { uid, ...data },
     ...(options || {}),
   });
 }
 
 export async function deleteSpiderTemplate(
-  id: string,
+  uid: string,
   options?: { [key: string]: any }
-): Promise<void> {
-  return request(`/api/v1/spider-templates/${id}`, {
-    method: "DELETE",
-    ...(options || {}),
-  });
-}
-
-export async function publishSpiderTemplate(
-  id: string,
-  options?: { [key: string]: any }
-): Promise<SpiderTemplateResponse> {
-  return request(`/api/v1/spider-templates/${id}/publish`, {
+): Promise<ActionResponse> {
+  return request("/api/spider/template/delete", {
     method: "POST",
+    data: { uid },
     ...(options || {}),
   });
 }
 
-export async function createSpiderFromTemplate(
-  id: string,
-  data: {
-    name: string;
-    target_url?: string;
-    config_overrides?: Record<string, any>;
-  },
+/** 保存字段映射 */
+export async function saveFieldMapping(
+  uid: string,
+  fieldMapping: FieldMapping[],
   options?: { [key: string]: any }
-): Promise<{ spider_id: string; spider_name: string }> {
-  return request(`/api/v1/spider-templates/${id}/create-spider`, {
+): Promise<ActionResponse> {
+  return request("/api/spider/template/fieldMapping", {
+    method: "POST",
+    data: { uid, fieldMapping },
+    ...(options || {}),
+  });
+}
+
+/** 保存配置参数 Schema */
+export async function saveConfigSchema(
+  uid: string,
+  configSchema: ConfigSchemaItem[],
+  options?: { [key: string]: any }
+): Promise<ActionResponse> {
+  return request("/api/spider/template/config", {
+    method: "POST",
+    data: { uid, configSchema },
+    ...(options || {}),
+  });
+}
+
+/** 从模板创建爬虫 */
+export async function createSpiderFromTemplate(
+  data: CreateSpiderFromTemplate,
+  options?: { [key: string]: any }
+): Promise<ActionResponse> {
+  return request("/api/spider/template/createSpider", {
     method: "POST",
     data,
     ...(options || {}),
